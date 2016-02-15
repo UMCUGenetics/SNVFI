@@ -111,7 +111,7 @@ JOB_LOG=$OUT_DIR/$JOB_ID.log
 JOB_ERR=$OUT_DIR/$JOB_ID.err
 JOB_SCRIPT=$OUT_DIR/$JOB_ID.sh
 
-echo "/hpc/cog_bioinf/common_scripts/SNVFI_pipeline/v2/SNVFI_filtering.sh $config $ini" >> $JOB_SCRIPT
+echo "/hpc/cog_bioinf/common_scripts/SNVFI/SNVFI_filtering.sh $config $ini" >> $JOB_SCRIPT
 
 qsub -q short -P cog_bioinf -pe threaded $MAX_THREADS -N $JOB_ID -e $JOB_ERR -o $JOB_LOG -m a -M $MAIL $JOB_SCRIPT
 
