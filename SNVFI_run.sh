@@ -13,6 +13,10 @@ source $ini
 
 ##########################Check parameters in config##################################
 
+if [ ! -d "$ROOT" ]; then
+    printf "Installation directory '$ROOT' specified as ROOT in $config not found!\n"
+    exit 1
+fi
 if [ ! -f "$BIOVCF" ]; then
     printf "Path to biovcf '$BIOVCF' specified as BIOVCF in $config not found or empty!\n"
     exit 1
@@ -111,7 +115,7 @@ JOB_LOG=$OUT_DIR/$JOB_ID.log
 JOB_ERR=$OUT_DIR/$JOB_ID.err
 JOB_SCRIPT=$OUT_DIR/$JOB_ID.sh
 
-echo "/hpc/cog_bioinf/common_scripts/SNVFI/SNVFI_filtering.sh $config $ini" >> $JOB_SCRIPT
+echo "$ROOT/SNVFI_filtering.sh $config $ini" >> $JOB_SCRIPT
 
 qsub -q short -P cog_bioinf -pe threaded $MAX_THREADS -N $JOB_ID -e $JOB_ERR -o $JOB_LOG -m a -M $MAIL $JOB_SCRIPT
 

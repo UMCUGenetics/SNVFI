@@ -77,16 +77,29 @@ TIME=`date +"%Y-%m-%d_%H:%M:%S"`
 echo $TIME": (1) Filtering SNV file with bio_vcf DONE" >> $LOG
 
 
+echo "Input file:" > $COUNTS
+grep -Pvc "^#" $SNV >> $COUNTS
+
+echo "Q"$QUAL" PASS "$COV"X autosomal:" >> $COUNTS
+grep -Pvc "^#" $vcf_filtered >> $COUNTS
+
+
 TIME=`date +"%Y-%m-%d_%H:%M:%S"`
 echo $TIME": (2) Removing blacklisted SNPs from SNV file STARTED" >> $LOG
 COUNT=1
 vcf_tmp=$vcf_filtered_zip
 for vcf in "${BLACKLIST[@]}";
 do
-    $VCFTOOLS/vcftools --gzvcf $vcf_tmp --exclude-positions $vcf --recode --recode-INFO-all --out $TMP_DIR/tmp_vcf_$COUNT 2>>$ERR
-    $TABIX/bgzip -c $TMP_DIR/tmp_vcf_$COUNT.recode.vcf > $TMP_DIR/tmp_vcf_$COUNT.recode.vcf.gz 2>>$ERR
-    $TABIX/tabix $TMP_DIR/tmp_vcf_$COUNT.recode.vcf.gz 2>>$ERR
-    vcf_tmp=$TMP_DIR/tmp_vcf_$COUNT.recode.vcf.gz
+    OUT=$TMP_DIR/$SUB_NAME"_"$REF_NAME"_Q"$QUAL"_PASS_"$COV"X_autosomal_nonBlacklist_"$COUNT
+        
+    $VCFTOOLS/vcftools --gzvcf $vcf_tmp --exclude-positions $vcf --recode --recode-INFO-all --out $OUT 2>>$ERR
+    $TABIX/bgzip -c $OUT.recode.vcf > $OUT.recode.vcf.gz 2>>$ERR
+    $TABIX/tabix $OUT.recode.vcf.gz 2>>$ERR
+
+    echo "Not in blacklist $vcf: " >> $COUNTS
+    zgrep -Pvc "^#" $OUT.recode.vcf.gz >> $COUNTS
+    
+    vcf_tmp=$OUT.recode.vcf.gz
     ((COUNT++))
 done
 
@@ -109,7 +122,7 @@ TIME=`date +"%Y-%m-%d_%H:%M:%S"`
 echo $TIME": (4) Removing files that are not needed STARTED" >> $LOG
 # remove files that are not needed
 #rm $out_nonRECUR".log" $out_noSNP".log" $vcf_filtered_zip* $vcf_noSNP_zip*
-rm $TMP_DIR/tmp_*
+#rm $TMP_DIR/tmp_*
 #rm $OUT_DIR/*autosomal.vcf
 TIME=`date +"%Y-%m-%d_%H:%M:%S"`
 echo $TIME": (4) Removing files that are not needed DONE" >> $LOG
@@ -133,14 +146,6 @@ TIME=`date +"%Y-%m-%d_%H:%M:%S"`
 echo $TIME": (5) Writing info on mutation numbers to log file STARTED" >> $LOG
 # Write info on mutations numbers to log file
 
-echo "Input file:" > $COUNTS
-grep -Pvc "^#" $SNV >> $COUNTS
-
-echo "Q"$QUAL" PASS "$COV"X autosomal:" >> $COUNTS
-grep -Pvc "^#" $vcf_filtered >> $COUNTS
-
-echo "Not in blacklist(s): " >> $COUNTS
-zgrep -Pvc "^#" $vcf_no_blacklist >> $COUNTS
 
 echo "No evidence reference:" >> $COUNTS
 grep -Pvc "^#" $vcf_no_evidence >> $COUNTS
