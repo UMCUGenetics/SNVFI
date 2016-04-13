@@ -117,7 +117,7 @@ JOB_SCRIPT=$OUT_DIR/$JOB_ID.sh
 
 echo "$ROOT/SNVFI_filtering.sh $config $ini" >> $JOB_SCRIPT
 
-qsub -q short -P cog_bioinf -pe threaded $MAX_THREADS -N $JOB_ID -e $JOB_ERR -o $JOB_LOG -m a -M $MAIL $JOB_SCRIPT
+qsub -q all.q -P cog_bioinf -pe threaded $MAX_THREADS -l h_rt=2:0:0 -l h_vmem=10G -N $JOB_ID -e $JOB_ERR -o $JOB_LOG -m a -M $MAIL $JOB_SCRIPT
 
 
 
