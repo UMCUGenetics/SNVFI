@@ -110,7 +110,7 @@ TIME=`date +"%Y-%m-%d_%H:%M:%S"`
 echo $TIME": (2) Removing blacklisted SNPs from SNV file DONE" >> $LOG
 
 #Load appropriate R version
-module load R_3.1.2
+module load R/3.2.2
 TIME=`date +"%Y-%m-%d_%H:%M:%S"`
 echo $TIME": (3) Filtering SNV file with R STARTED" >> $LOG
 Rscript $RSCRIPT $vcf_no_blacklist $REF $SUB $vcf_no_evidence $vcf_final $pnr_plot_file 2>>$ERR
