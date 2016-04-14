@@ -85,6 +85,12 @@ if [ ! $MAIL ]; then
     exit 1
 fi
 
+if [ ! $CLEANUP ]; then
+    printf "Please specify if you want to clean up in-between files. Specify as CLEANUP=YES|NO in $ini!\n"
+    exit
+fi
+
+
 
 printf "Running filtering with the following settings:\n"
 printf "\tBIOVCF : $BIOVCF\n"
@@ -107,6 +113,7 @@ done
 printf "\tQUAL : $QUAL\n"
 printf "\tCOV : $COV\n"
 printf "\tMAIL : $MAIL\n"
+printf "\tCLEANUP : $CLEANUP\n"
 
 #Create job script
 

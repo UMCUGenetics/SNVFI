@@ -118,14 +118,7 @@ TIME=`date +"%Y-%m-%d_%H:%M:%S"`
 echo $TIME": (3) Filtering SNV file with R DONE" >> $LOG
 
 
-TIME=`date +"%Y-%m-%d_%H:%M:%S"`
-echo $TIME": (4) Removing files that are not needed STARTED" >> $LOG
-# remove files that are not needed
-#rm $out_nonRECUR".log" $out_noSNP".log" $vcf_filtered_zip* $vcf_noSNP_zip*
-#rm $TMP_DIR/tmp_*
-#rm $OUT_DIR/*autosomal.vcf
-TIME=`date +"%Y-%m-%d_%H:%M:%S"`
-echo $TIME": (4) Removing files that are not needed DONE" >> $LOG
+
 
 #add filter steps to header
 vcf_final_tmp=$vcf_final"_tmp"
@@ -143,7 +136,7 @@ grep -Pv "^#" $vcf_final >> $vcf_final_tmp
 mv $vcf_final_tmp $vcf_final
 
 TIME=`date +"%Y-%m-%d_%H:%M:%S"`
-echo $TIME": (5) Writing info on mutation numbers to log file STARTED" >> $LOG
+echo $TIME": (4) Writing info on mutation numbers to log file STARTED" >> $LOG
 # Write info on mutations numbers to log file
 
 
@@ -154,5 +147,21 @@ echo "Called and PNR > 0.3 in subject:" >> $COUNTS
 grep -Pvc "^#" $vcf_final >> $COUNTS
 
 TIME=`date +"%Y-%m-%d_%H:%M:%S"`
-echo $TIME": (5) Writing info on mutation numbers to log file DONE" >> $LOG
+echo $TIME": (4) Writing info on mutation numbers to log file DONE" >> $LOG
+
+TIME=`date +"%Y-%m-%d_%H:%M:%S"`
+echo $TIME": (5) Removing files that are not needed STARTED" >> $LOG
+# remove files that are not needed
+if [ $CLEANUP == "YES" ]; then
+    rm -r $TMP_DIR
+    rm $OUT_DIR/*autosomal.vcf
+    rm $OUT_DIR/*autosomal.vcf.gz
+    rm $OUT_DIR/*autosomal.vcf.gz.tbi
+    rm $OUT_DIR/*nonBlacklist.vcf.gz
+    rm $OUT_DIR/*nonBlacklist.vcf.gz.tbi
+fi
+
+
+TIME=`date +"%Y-%m-%d_%H:%M:%S"`
+echo $TIME": (5) Removing files that are not needed DONE" >> $LOG
 
