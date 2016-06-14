@@ -10,9 +10,11 @@ args = commandArgs(trailingOnly = TRUE)
 vcf_file = args[1]
 REF = as.integer(args[2])
 SUB = as.integer(args[3])
-vcf_no_evidence = args[4]
-vcf_final = args[5]
-pnr_plot_file = args[6]
+#ADDED PNR ARGUMENT
+PNR = as.numeric(args[4])
+vcf_no_evidence = args[5]
+vcf_final = args[6]
+pnr_plot_file = args[7]
 
 # Read vcf file
 vcf = readVcf(vcf_file, "hg19")
@@ -38,7 +40,7 @@ alt_matrix = matrix(data = altdepth, nrow = n, ncol = s)
 genotype = geno(vcf)$GT
 called_in_subject = which(!(genotype[,SUB] == "0/0"))
 
-VAF_0.3_in_subject = which(VAF_matrix[,SUB] >= 0.3)
+VAF_in_subject = which(VAF_matrix[,SUB] >= PNR)
 
 # No evidence in reference sample
 no_evidence_reference = which(alt_matrix[,REF] < 1)
@@ -51,7 +53,7 @@ overlap = function(x)
 }
 
 # Find final set of SNVs that meet al criteria
-final = overlap(list(called_in_subject, VAF_0.3_in_subject, no_evidence_reference))
+final = overlap(list(called_in_subject, VAF_in_subject, no_evidence_reference))
 
 # --------------------- OUTPUT VCFs ---------------------------
 

@@ -56,10 +56,10 @@ vcf_filtered_zip="$OUT_DIR$SUB_NAME"_"$REF_NAME$s"
 s="_Q"$QUAL"_PASS_"$COV"X_autosomal_nonBlacklist.vcf.gz"
 vcf_no_blacklist="$OUT_DIR$SUB_NAME"_"$REF_NAME$s"
 
-s="_Q"$QUAL"_PASS_"$COV"X_autosomal_nonBlacklist_noEvidenceRef.vcf"
+s="_Q"$QUAL"_PASS_"$COV"X_PNR"$PNR"_autosomal_nonBlacklist_noEvidenceRef.vcf"
 vcf_no_evidence="$OUT_DIR$SUB_NAME"_"$REF_NAME$s"
 
-s="_Q"$QUAL"_PASS_"$COV"X_autosomal_nonBlacklist_final.vcf"
+s="_Q"$QUAL"_PASS_"$COV"X_PNR"$PNR"_autosomal_nonBlacklist_final.vcf"
 vcf_final="$OUT_DIR$SUB_NAME"_"$REF_NAME$s"
 
 s="_PNR.pdf"
@@ -113,26 +113,19 @@ echo $TIME": (2) Removing blacklisted SNPs from SNV file DONE" >> $LOG
 module load R/3.2.2
 TIME=`date +"%Y-%m-%d_%H:%M:%S"`
 echo $TIME": (3) Filtering SNV file with R STARTED" >> $LOG
-Rscript $RSCRIPT $vcf_no_blacklist $REF $SUB $vcf_no_evidence $vcf_final $pnr_plot_file 2>>$ERR
+Rscript $RSCRIPT $vcf_no_blacklist $REF $SUB $PNR $vcf_no_evidence $vcf_final $pnr_plot_file 2>>$ERR
 TIME=`date +"%Y-%m-%d_%H:%M:%S"`
 echo $TIME": (3) Filtering SNV file with R DONE" >> $LOG
 
 
-TIME=`date +"%Y-%m-%d_%H:%M:%S"`
-echo $TIME": (4) Removing files that are not needed STARTED" >> $LOG
-# remove files that are not needed
-#rm $out_nonRECUR".log" $out_noSNP".log" $vcf_filtered_zip* $vcf_noSNP_zip*
-#rm $TMP_DIR/tmp_*
-#rm $OUT_DIR/*autosomal.vcf
-TIME=`date +"%Y-%m-%d_%H:%M:%S"`
-echo $TIME": (4) Removing files that are not needed DONE" >> $LOG
+
 
 #add filter steps to header
 vcf_final_tmp=$vcf_final"_tmp"
 
 TIME=`date +"%Y-%m-%d_%H:%M:%S"`
 #FINAL_HEADER=`grep -P "^#" $vcf_final`
-HEADER_ADD="##SNVFI_filtering=<Version=$VERSION, Date=$TIME, Tools='bio-vcf=$BIOVCF tabix=$TABIX vcftools=$VCFTOOLS rscript=$RSCRIPT', SNV=$SNV, SUB=$SUB, REF=$REF, OUT_DIR=$OUT_DIR, QUAL=$QUAL, COV=$COV, BLACKLIST=["
+HEADER_ADD="##SNVFI_filtering=<Version=$VERSION, Date=$TIME, Tools='bio-vcf=$BIOVCF tabix=$TABIX vcftools=$VCFTOOLS rscript=$RSCRIPT', SNV=$SNV, SUB=$SUB, REF=$REF, OUT_DIR=$OUT_DIR, QUAL=$QUAL, COV=$COV, PNR=$PNR, BLACKLIST=["
 HEADER_ADD+=`join , ${BLACKLIST[@]}`
 HEADER_ADD+="]>"
 
@@ -143,16 +136,32 @@ grep -Pv "^#" $vcf_final >> $vcf_final_tmp
 mv $vcf_final_tmp $vcf_final
 
 TIME=`date +"%Y-%m-%d_%H:%M:%S"`
-echo $TIME": (5) Writing info on mutation numbers to log file STARTED" >> $LOG
+echo $TIME": (4) Writing info on mutation numbers to log file STARTED" >> $LOG
 # Write info on mutations numbers to log file
 
 
 echo "No evidence reference:" >> $COUNTS
 grep -Pvc "^#" $vcf_no_evidence >> $COUNTS
 
-echo "Called and PNR > 0.3 in subject:" >> $COUNTS
+echo "Called and PNR > $PNR in subject:" >> $COUNTS
 grep -Pvc "^#" $vcf_final >> $COUNTS
 
 TIME=`date +"%Y-%m-%d_%H:%M:%S"`
-echo $TIME": (5) Writing info on mutation numbers to log file DONE" >> $LOG
+echo $TIME": (4) Writing info on mutation numbers to log file DONE" >> $LOG
+
+TIME=`date +"%Y-%m-%d_%H:%M:%S"`
+echo $TIME": (5) Removing files that are not needed STARTED" >> $LOG
+# remove files that are not needed
+if [ $CLEANUP == "YES" ]; then
+    rm -r $TMP_DIR
+    rm $OUT_DIR/*autosomal.vcf
+    rm $OUT_DIR/*autosomal.vcf.gz
+    rm $OUT_DIR/*autosomal.vcf.gz.tbi
+    rm $OUT_DIR/*nonBlacklist.vcf.gz
+    rm $OUT_DIR/*nonBlacklist.vcf.gz.tbi
+fi
+
+
+TIME=`date +"%Y-%m-%d_%H:%M:%S"`
+echo $TIME": (5) Removing files that are not needed DONE" >> $LOG
 
