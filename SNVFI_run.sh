@@ -79,6 +79,10 @@ if [ ! $COV ]; then
     printf "Minimum Quality score specified as COV in $ini not found!\n"
     exit 1
 fi
+if [ ! $PNR ]; then
+    printf "PNR specified as PNR in $ini not found!\n"
+    exit 1
+fi
 
 if [ ! $MAIL ]; then
     printf "Mail adress specified as MAIL in $ini not found!\n"
@@ -112,6 +116,7 @@ done
 
 printf "\tQUAL : $QUAL\n"
 printf "\tCOV : $COV\n"
+printf "\tPNR : $PNR\n"
 printf "\tMAIL : $MAIL\n"
 printf "\tCLEANUP : $CLEANUP\n"
 
