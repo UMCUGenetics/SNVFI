@@ -12,7 +12,7 @@ REF = as.integer(args[2])
 SUB = as.integer(args[3])
 #ADDED PNR ARGUMENT
 PNR = as.numeric(args[4])
-vcf_no_evidence = args[5]
+vcf_no_evidence_and_called = args[5]
 vcf_final = args[6]
 pnr_plot_file = args[7]
 
@@ -55,9 +55,12 @@ overlap = function(x)
 # Find final set of SNVs that meet al criteria
 final = overlap(list(called_in_subject, VAF_in_subject, no_evidence_reference))
 
+# Called SNVS with no evidence in the reference
+no_evidence_and_called = overlap(list(called_in_subject, no_evidence_reference))
+
 # --------------------- OUTPUT VCFs ---------------------------
 
-writeVcf(vcf[no_evidence_reference,], vcf_no_evidence)
+writeVcf(vcf[no_evidence_and_called,], vcf_no_evidence_and_called)
 writeVcf(vcf[final,], vcf_final)
 
 # --------------------- VAF/PNR plot ------------------------------
