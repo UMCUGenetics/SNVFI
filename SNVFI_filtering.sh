@@ -56,8 +56,8 @@ vcf_filtered_zip="$OUT_DIR$SUB_NAME"_"$REF_NAME$s"
 s="_Q"$QUAL"_PASS_"$COV"X_autosomal_nonBlacklist.vcf.gz"
 vcf_no_blacklist="$OUT_DIR$SUB_NAME"_"$REF_NAME$s"
 
-s="_Q"$QUAL"_PASS_"$COV"X_PNR"$PNR"_autosomal_nonBlacklist_noEvidenceRef.vcf"
-vcf_no_evidence="$OUT_DIR$SUB_NAME"_"$REF_NAME$s"
+s="_Q"$QUAL"_PASS_"$COV"X_autosomal_nonBlacklist_noEvidenceRef.vcf"
+vcf_no_evidence_and_called="$OUT_DIR$SUB_NAME"_"$REF_NAME$s"
 
 s="_Q"$QUAL"_PASS_"$COV"X_PNR"$PNR"_autosomal_nonBlacklist_final.vcf"
 vcf_final="$OUT_DIR$SUB_NAME"_"$REF_NAME$s"
@@ -113,7 +113,7 @@ echo $TIME": (2) Removing blacklisted SNPs from SNV file DONE" >> $LOG
 module load R/3.2.2
 TIME=`date +"%Y-%m-%d_%H:%M:%S"`
 echo $TIME": (3) Filtering SNV file with R STARTED" >> $LOG
-Rscript $RSCRIPT $vcf_no_blacklist $REF $SUB $PNR $vcf_no_evidence $vcf_final $pnr_plot_file 2>>$ERR
+Rscript $RSCRIPT $vcf_no_blacklist $REF $SUB $PNR $vcf_no_evidence_and_called $vcf_final $pnr_plot_file 2>>$ERR
 TIME=`date +"%Y-%m-%d_%H:%M:%S"`
 echo $TIME": (3) Filtering SNV file with R DONE" >> $LOG
 
@@ -140,8 +140,8 @@ echo $TIME": (4) Writing info on mutation numbers to log file STARTED" >> $LOG
 # Write info on mutations numbers to log file
 
 
-echo "No evidence reference:" >> $COUNTS
-grep -Pvc "^#" $vcf_no_evidence >> $COUNTS
+echo "No evidence reference and called:" >> $COUNTS
+grep -Pvc "^#" $vcf_no_evidence_and_called >> $COUNTS
 
 echo "Called and PNR > $PNR in subject:" >> $COUNTS
 grep -Pvc "^#" $vcf_final >> $COUNTS
