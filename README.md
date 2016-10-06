@@ -47,7 +47,7 @@ SNVFI is configured using a config file, and an ini file for each filtering run.
 
 ### Run SNVFI
 ```bash
-    sh SNVFI_run.sh
+    sh SNVFI_run.sh <config> <ini>
 ```
 
 ## Dependencies
