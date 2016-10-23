@@ -27,8 +27,8 @@ SNVFI is configured using a config file, and an ini file for each filtering run.
 ### Edit SNVFI_dummy.ini
 ```bash
     SNV=<Path to input vcf>
-    SUB=<0-based Subject column>
-    REF=<0-based Reference column>
+    SUB=<Subject column in vcf>
+    REF=<Reference column in vcf>
     OUT_DIR=<Output directory>
 
     BLACKLIST=(
