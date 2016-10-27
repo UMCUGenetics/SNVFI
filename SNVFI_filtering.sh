@@ -11,6 +11,17 @@
 function join { local IFS="$1"; shift; echo "$*"; }
 function techo { echo `date +"%Y-%m-%d_%H:%M:%S"`": "$*; }
 
+# -----------------------------------------------------------------------------
+# Define absolute paths to external programs
+# -----------------------------------------------------------------------------
+run_RSCRIPT="$R_PREFIX"Rscript
+run_VCFTOOLS="$VCFTOOLS_PREFIX"vcftools
+run_BGZIP="$TABIX_PREFIX"bgzip
+run_TABIX="$TABIX_PREFIX"tabix
+run_BIOVCF="$BIOVCF_PREFIX"bio-vcf
+run_GREP="$GREP_PREFIX"grep
+run_ZGREP="$ZGREP_PREFIX"zgrep
+
 # Read default configuration file
 config=$1
 ini=$2
@@ -28,7 +39,7 @@ fi
 
 
 # get sample names
-SAMPLES=($(grep -P "^#CHROM" < $SNV))
+SAMPLES=($($run_GREP -P "^#CHROM" < $SNV))
 
 REF_NAME=${SAMPLES[ $(( $REF+8 )) ]}
 SUB_NAME=${SAMPLES[ $(( $SUB+8 )) ]}
@@ -70,18 +81,18 @@ pnr_plot_file="$OUT_DIR$SUB_NAME"_"$REF_NAME$s"
 techo "(1) Filtering SNV file with bio_vcf STARTED" >> $LOG
 # bio vcf is zero based: subtract one from ref and sub index
 export TMPDIR=$TMP_DIR
-cat $SNV | $BIOVCF -i --num-threads $MAX_THREADS --thread-lines 50_000 --filter "r.filter=='PASS' and r.qual>=$QUAL and r.chrom.to_i>0 and r.chrom.to_i<23" \
+cat $SNV | $run_BIOVCF -i --num-threads $MAX_THREADS --thread-lines 50_000 --filter "r.filter=='PASS' and r.qual>=$QUAL and r.chrom.to_i>0 and r.chrom.to_i<23" \
 --sfilter-samples $(($REF-1)),$(($SUB-1)) --sfilter "!s.empty? and s.dp>=$COV" 1>$vcf_filtered 2>>$ERR
-$TABIX/bgzip -c $vcf_filtered 1> $vcf_filtered_zip 2>> $ERR
-$TABIX/tabix -p vcf $vcf_filtered_zip 2>> $ERR
+$run_BGZIP -c $vcf_filtered 1> $vcf_filtered_zip 2>> $ERR
+$run_TABIX -p vcf $vcf_filtered_zip 2>> $ERR
 
 techo "(1) Filtering SNV file with bio_vcf DONE" >> $LOG
 
 echo "Input file:" > $COUNTS
-grep -Pvc "^#" $SNV >> $COUNTS
+$run_GREP -Pvc "^#" $SNV >> $COUNTS
 
 echo "Q"$QUAL" PASS "$COV"X autosomal:" >> $COUNTS
-grep -Pvc "^#" $vcf_filtered >> $COUNTS
+$run_GREP -Pvc "^#" $vcf_filtered >> $COUNTS
 
 techo "(2) Removing blacklisted SNPs from SNV file STARTED" >> $LOG
 COUNT=1
@@ -90,12 +101,12 @@ for vcf in "${BLACKLIST[@]}";
 do
     OUT=$TMP_DIR/$SUB_NAME"_"$REF_NAME"_Q"$QUAL"_PASS_"$COV"X_autosomal_nonBlacklist_"$COUNT
         
-    $VCFTOOLS/vcftools --gzvcf $vcf_tmp --exclude-positions $vcf --recode --recode-INFO-all --out $OUT 2>>$ERR
-    $TABIX/bgzip -c $OUT.recode.vcf > $OUT.recode.vcf.gz 2>>$ERR
-    $TABIX/tabix $OUT.recode.vcf.gz 2>>$ERR
+    $run_VCFTOOLS --gzvcf $vcf_tmp --exclude-positions $vcf --recode --recode-INFO-all --out $OUT 2>>$ERR
+    $run_BGZIP -c $OUT.recode.vcf > $OUT.recode.vcf.gz 2>>$ERR
+    $run_TABIX $OUT.recode.vcf.gz 2>>$ERR
 
     echo "Not in blacklist $vcf: " >> $COUNTS
-    zgrep -Pvc "^#" $OUT.recode.vcf.gz >> $COUNTS
+    $run_ZGREP -Pvc "^#" $OUT.recode.vcf.gz >> $COUNTS
     
     vcf_tmp=$OUT.recode.vcf.gz
     ((COUNT++))
@@ -107,9 +118,8 @@ mv $vcf_tmp.tbi $vcf_no_blacklist.tbi
 techo "(2) Removing blacklisted SNPs from SNV file DONE" >> $LOG
 
 #Load appropriate R version
-module load R/3.2.2
 techo "(3) Filtering SNV file with R STARTED" >> $LOG
-Rscript $RSCRIPT $vcf_no_blacklist $REF $SUB $PNR $vcf_no_evidence_and_called $vcf_final $pnr_plot_file 2>>$ERR
+$run_RSCRIPT $RSCRIPT $vcf_no_blacklist $REF $SUB $PNR $vcf_no_evidence_and_called $vcf_final $pnr_plot_file 2>>$ERR
 techo "(3) Filtering SNV file with R DONE" >> $LOG
 
 
@@ -120,24 +130,24 @@ vcf_final_tmp=$vcf_final"_tmp"
 
 TIME=`date +"%Y-%m-%d_%H:%M:%S"`
 #FINAL_HEADER=`grep -P "^#" $vcf_final`
-HEADER_ADD="##SNVFI_filtering=<Version=$VERSION, Date=$TIME, Tools='bio-vcf=$BIOVCF tabix=$TABIX vcftools=$VCFTOOLS rscript=$RSCRIPT', SNV=$SNV, SUB=$SUB, REF=$REF, OUT_DIR=$OUT_DIR, QUAL=$QUAL, COV=$COV, PNR=$PNR, BLACKLIST=["
+HEADER_ADD="##SNVFI_filtering=<Version=$VERSION, Date=$TIME, Tools='bio-vcf=$run_BIOVCF tabix=$run_TABIX vcftools=$run_VCFTOOLS rscript=$run_RSCRIPT', SNV=$SNV, SUB=$SUB, REF=$REF, OUT_DIR=$OUT_DIR, QUAL=$QUAL, COV=$COV, PNR=$PNR, BLACKLIST=["
 HEADER_ADD+=`join , ${BLACKLIST[@]}`
 HEADER_ADD+="]>"
 
-grep -P "^##" $vcf_final > $vcf_final_tmp
+$run_GREP -P "^##" $vcf_final > $vcf_final_tmp
 echo $HEADER_ADD >> $vcf_final_tmp
-grep -P "^#CHROM" $vcf_final >> $vcf_final_tmp
-grep -Pv "^#" $vcf_final >> $vcf_final_tmp
+$run_GREP -P "^#CHROM" $vcf_final >> $vcf_final_tmp
+$run_GREP -Pv "^#" $vcf_final >> $vcf_final_tmp
 mv $vcf_final_tmp $vcf_final
 
 techo "(4) Writing info on mutation numbers to log file STARTED" >> $LOG
 
 # Write info on mutations numbers to log file
 echo "No evidence reference and called:" >> $COUNTS
-grep -Pvc "^#" $vcf_no_evidence_and_called >> $COUNTS
+$run_GREP -Pvc "^#" $vcf_no_evidence_and_called >> $COUNTS
 
 echo "Called and PNR > $PNR in subject:" >> $COUNTS
-grep -Pvc "^#" $vcf_final >> $COUNTS
+$run_GREP -Pvc "^#" $vcf_final >> $COUNTS
 
 techo "(4) Writing info on mutation numbers to log file DONE" >> $LOG
 techo "(5) Removing files that are not needed STARTED" >> $LOG
