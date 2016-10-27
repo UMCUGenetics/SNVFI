@@ -5,9 +5,11 @@
 # @Args: (1) Path to .cfg file containing paths to tools. (2) Path to .ini file containing
 # job specific settings
 
-# helper functions
+# -----------------------------------------------------------------------------
+# Define helper functions
+# -----------------------------------------------------------------------------
 function join { local IFS="$1"; shift; echo "$*"; }
-
+function techo { echo `date +"%Y-%m-%d_%H:%M:%S"`": "$*; }
 
 # Read default configuration file
 config=$1
@@ -40,11 +42,11 @@ INSTALL_DIR=$( cd $( dirname '${BASH_SOURCE[0]}' ) && pwd )
 SCRIPT_NAME=`basename "$0"`
 VERSION=$INSTALL_DIR/$SCRIPT_NAME
 
-
-# print reference and subject sample names, as feedback for user
-TIME=`date +"%Y-%m-%d_%H:%M:%S"`
-echo $TIME" : "$SUB_NAME "is used as the subject sample" >> $LOG
-echo $TIME" : "$REF_NAME "is used as the reference sample" >> $LOG
+# -----------------------------------------------------------------------------
+# Print reference and subject sample names, as feedback for user
+# -----------------------------------------------------------------------------
+techo $SUB_NAME" is used as the subject sample" >> $LOG
+techo $REF_NAME" is used as the reference sample" >> $LOG
 
 # make output file names
 s="_Q"$QUAL"_PASS_"$COV"X_autosomal.vcf"
@@ -65,17 +67,15 @@ vcf_final="$OUT_DIR$SUB_NAME"_"$REF_NAME$s"
 s="_PNR.pdf"
 pnr_plot_file="$OUT_DIR$SUB_NAME"_"$REF_NAME$s"
 
-TIME=`date +"%Y-%m-%d_%H:%M:%S"`
-echo $TIME": (1) Filtering SNV file with bio_vcf STARTED" >> $LOG
+techo "(1) Filtering SNV file with bio_vcf STARTED" >> $LOG
 # bio vcf is zero based: subtract one from ref and sub index
 export TMPDIR=$TMP_DIR
 cat $SNV | $BIOVCF -i --num-threads $MAX_THREADS --thread-lines 50_000 --filter "r.filter=='PASS' and r.qual>=$QUAL and r.chrom.to_i>0 and r.chrom.to_i<23" \
 --sfilter-samples $(($REF-1)),$(($SUB-1)) --sfilter "!s.empty? and s.dp>=$COV" 1>$vcf_filtered 2>>$ERR
 $TABIX/bgzip -c $vcf_filtered 1> $vcf_filtered_zip 2>> $ERR
 $TABIX/tabix -p vcf $vcf_filtered_zip 2>> $ERR
-TIME=`date +"%Y-%m-%d_%H:%M:%S"`
-echo $TIME": (1) Filtering SNV file with bio_vcf DONE" >> $LOG
 
+techo "(1) Filtering SNV file with bio_vcf DONE" >> $LOG
 
 echo "Input file:" > $COUNTS
 grep -Pvc "^#" $SNV >> $COUNTS
@@ -83,9 +83,7 @@ grep -Pvc "^#" $SNV >> $COUNTS
 echo "Q"$QUAL" PASS "$COV"X autosomal:" >> $COUNTS
 grep -Pvc "^#" $vcf_filtered >> $COUNTS
 
-
-TIME=`date +"%Y-%m-%d_%H:%M:%S"`
-echo $TIME": (2) Removing blacklisted SNPs from SNV file STARTED" >> $LOG
+techo "(2) Removing blacklisted SNPs from SNV file STARTED" >> $LOG
 COUNT=1
 vcf_tmp=$vcf_filtered_zip
 for vcf in "${BLACKLIST[@]}";
@@ -106,16 +104,13 @@ done
 mv $vcf_tmp $vcf_no_blacklist
 mv $vcf_tmp.tbi $vcf_no_blacklist.tbi
 
-TIME=`date +"%Y-%m-%d_%H:%M:%S"`
-echo $TIME": (2) Removing blacklisted SNPs from SNV file DONE" >> $LOG
+techo "(2) Removing blacklisted SNPs from SNV file DONE" >> $LOG
 
 #Load appropriate R version
 module load R/3.2.2
-TIME=`date +"%Y-%m-%d_%H:%M:%S"`
-echo $TIME": (3) Filtering SNV file with R STARTED" >> $LOG
+techo "(3) Filtering SNV file with R STARTED" >> $LOG
 Rscript $RSCRIPT $vcf_no_blacklist $REF $SUB $PNR $vcf_no_evidence_and_called $vcf_final $pnr_plot_file 2>>$ERR
-TIME=`date +"%Y-%m-%d_%H:%M:%S"`
-echo $TIME": (3) Filtering SNV file with R DONE" >> $LOG
+techo "(3) Filtering SNV file with R DONE" >> $LOG
 
 
 
@@ -135,22 +130,18 @@ grep -P "^#CHROM" $vcf_final >> $vcf_final_tmp
 grep -Pv "^#" $vcf_final >> $vcf_final_tmp
 mv $vcf_final_tmp $vcf_final
 
-TIME=`date +"%Y-%m-%d_%H:%M:%S"`
-echo $TIME": (4) Writing info on mutation numbers to log file STARTED" >> $LOG
+techo "(4) Writing info on mutation numbers to log file STARTED" >> $LOG
+
 # Write info on mutations numbers to log file
-
-
 echo "No evidence reference and called:" >> $COUNTS
 grep -Pvc "^#" $vcf_no_evidence_and_called >> $COUNTS
 
 echo "Called and PNR > $PNR in subject:" >> $COUNTS
 grep -Pvc "^#" $vcf_final >> $COUNTS
 
-TIME=`date +"%Y-%m-%d_%H:%M:%S"`
-echo $TIME": (4) Writing info on mutation numbers to log file DONE" >> $LOG
+techo "(4) Writing info on mutation numbers to log file DONE" >> $LOG
+techo "(5) Removing files that are not needed STARTED" >> $LOG
 
-TIME=`date +"%Y-%m-%d_%H:%M:%S"`
-echo $TIME": (5) Removing files that are not needed STARTED" >> $LOG
 # remove files that are not needed
 if [ $CLEANUP == "YES" ]; then
     rm -r $TMP_DIR
@@ -161,7 +152,4 @@ if [ $CLEANUP == "YES" ]; then
     rm $OUT_DIR/*nonBlacklist.vcf.gz.tbi
 fi
 
-
-TIME=`date +"%Y-%m-%d_%H:%M:%S"`
-echo $TIME": (5) Removing files that are not needed DONE" >> $LOG
-
+techo "(5) Removing files that are not needed DONE" >> $LOG
