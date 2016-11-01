@@ -27,8 +27,8 @@ SNVFI is configured using a config file, and an ini file for each filtering run.
 ### Edit SNVFI_dummy.ini
 ```bash
     SNV=<Path to input vcf>
-    SUB=<0-based Subject column>
-    REF=<0-based Reference column>
+    SUB=<Subject column in vcf>
+    REF=<Reference column in vcf>
     OUT_DIR=<Output directory>
 
     BLACKLIST=(
@@ -47,7 +47,7 @@ SNVFI is configured using a config file, and an ini file for each filtering run.
 
 ### Run SNVFI
 ```bash
-    sh SNVFI_run.sh
+    sh SNVFI_run.sh <config> <ini>
 ```
 
 ## Dependencies
@@ -59,9 +59,11 @@ SNVFI is configured using a config file, and an ini file for each filtering run.
     - Sun Grid Engine (tested on SGE 8.1.8)
     
 ### Standalone tools
+    - R 3.2.2
     - bio-vcf 0.9.2 (https://github.com/pjotrp/bioruby-vcf)
     - tabix-0.2.6
     - vcftools-0.1.14
+    - zgrep, grep
 
 ### R libraries
     - VariantAnnotation

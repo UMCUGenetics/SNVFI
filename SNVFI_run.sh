@@ -13,8 +13,8 @@ source $ini
 
 ##########################Check parameters in config##################################
 
-if [ ! -d "$ROOT" ]; then
-    printf "Installation directory '$ROOT' specified as ROOT in $config not found!\n"
+if [ ! -d "$SNVFI_ROOT" ]; then
+    printf "Installation directory '$SNVFI_ROOT' specified as SNVFI_ROOT in $config not found!\n"
     exit 1
 fi
 if [ ! -f "$BIOVCF" ]; then
@@ -127,7 +127,7 @@ JOB_LOG=$OUT_DIR/$JOB_ID.log
 JOB_ERR=$OUT_DIR/$JOB_ID.err
 JOB_SCRIPT=$OUT_DIR/$JOB_ID.sh
 
-echo "$ROOT/SNVFI_filtering.sh $config $ini" >> $JOB_SCRIPT
+echo "$SNVFI_ROOT/SNVFI_filtering.sh $config $ini" >> $JOB_SCRIPT
 
 qsub -q all.q -P cog_bioinf -pe threaded $MAX_THREADS -l h_rt=2:0:0 -l h_vmem=10G -N $JOB_ID -e $JOB_ERR -o $JOB_LOG -m a -M $MAIL $JOB_SCRIPT
 
