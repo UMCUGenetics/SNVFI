@@ -13,27 +13,31 @@ source $ini
 
 ##########################Check parameters in config##################################
 
+
 if [ ! -d "$SNVFI_ROOT" ]; then
     printf "Installation directory '$SNVFI_ROOT' specified as SNVFI_ROOT in $config not found!\n"
     exit 1
 fi
-if [ ! -f "$BIOVCF" ]; then
-    printf "Path to biovcf '$BIOVCF' specified as BIOVCF in $config not found or empty!\n"
+if [ ! -d "$BIOVCF_PREFIX" ]; then
+    printf "biovcf directory '$BIOVCF_PREFIX' specified as BIOVCF_PREFIX in $config not found or empty!\n"
     exit 1
 fi
-if [ ! -d "$TABIX" ]; then
-    printf "Tabix directory '$TABIX' specified as TABIX in $config not found or empty!\n"
+if [ ! -d "$TABIX_PREFIX" ]; then
+    printf "tabix directory '$TABIX_PREFIX' specified as TABIX_PREFIX in $config not found or empty!\n"
     exit 1
 fi
-if [ ! -d "$VCFTOOLS" ]; then
-    printf "Path to vcftools binaries '$VCFTOOLS' specified as VCFTOOLS in $config not found or empty!\n"
+if [ ! -d "$VCFTOOLS_PREFIX" ]; then
+    printf "vcftools directory '$VCFTOOLS_PREFIX' specified as VCFTOOLS_PREFIX in $config not found or empty!\n"
+    exit 1
+fi
+if [ ! -d "$R_PREFIX" ]; then
+    printf "R directory '$R_PREFIX' specified as R_PREFIX in $config not found or empty!\n"
     exit 1
 fi
 if [ ! -f "$RSCRIPT" ]; then
     printf "Filtering rscript '$RSCRIPT' specified as RSCRIPT in $config not found or empty!\n"
     exit 1
 fi
-
 if [ ! "$MAX_THREADS" ]; then
     printf "Maximum threads specified as MAX_THREADS in $config not found or empty!\n"
 fi
@@ -97,9 +101,10 @@ fi
 
 
 printf "Running filtering with the following settings:\n"
-printf "\tBIOVCF : $BIOVCF\n"
-printf "\tTABIX : $TABIX\n"
-printf "\tVCFTOOLS : $VCFTOOLS\n"
+printf "\tBIOVCF : $BIOVCF_PREFIX\n"
+printf "\tTABIX : $TABIX_PREFIX\n"
+printf "\tVCFTOOLS : $VCFTOOLS_PREFIX\n"
+printf "\tR VERSION : $R_PREFIX\n"
 printf "\tRSCRIPT : $RSCRIPT\n"
 printf "\tMAX_THREADS : $MAX_THREADS\n"
 
@@ -108,6 +113,7 @@ printf "\tREF : $REF\n"
 printf "\tSUB : $SUB\n"
 printf "\tOUT_DIR : $OUT_DIR\n"
 printf "\tBLACKLIST :\n"
+
 
 for vcf in "${BLACKLIST[@]}";
 do

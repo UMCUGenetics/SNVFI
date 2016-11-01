@@ -11,16 +11,6 @@
 function join { local IFS="$1"; shift; echo "$*"; }
 function techo { echo `date +"%Y-%m-%d_%H:%M:%S"`": "$*; }
 
-# -----------------------------------------------------------------------------
-# Define absolute paths to external programs
-# -----------------------------------------------------------------------------
-run_RSCRIPT="$R_PREFIX"Rscript
-run_VCFTOOLS="$VCFTOOLS_PREFIX"vcftools
-run_BGZIP="$TABIX_PREFIX"bgzip
-run_TABIX="$TABIX_PREFIX"tabix
-run_BIOVCF="$BIOVCF_PREFIX"bio-vcf
-run_GREP="$GREP_PREFIX"grep
-run_ZGREP="$ZGREP_PREFIX"zgrep
 
 # Read default configuration file
 config=$1
@@ -29,13 +19,25 @@ ini=$2
 source $config
 source $ini
 
+# -----------------------------------------------------------------------------
+# Define absolute paths to external programs
+# -----------------------------------------------------------------------------
+
+
+run_RSCRIPT="$R_PREFIX"Rscript
+run_VCFTOOLS="$VCFTOOLS_PREFIX"vcftools
+run_BGZIP="$TABIX_PREFIX"bgzip
+run_TABIX="$TABIX_PREFIX"tabix
+run_BIOVCF="$BIOVCF_PREFIX"bio-vcf
+run_GREP="$GREP_PREFIX"grep
+run_ZGREP="$ZGREP_PREFIX"zgrep
+
 # create tmp dir and log-files
 TMP_DIR=$OUT_DIR/tmp
 
 if [ ! -d $TMP_DIR ]; then
     mkdir $TMP_DIR
 fi
-
 
 
 # get sample names
