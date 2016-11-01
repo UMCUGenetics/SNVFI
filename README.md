@@ -59,9 +59,11 @@ SNVFI is configured using a config file, and an ini file for each filtering run.
     - Sun Grid Engine (tested on SGE 8.1.8)
     
 ### Standalone tools
+    - R 3.2.2
     - bio-vcf 0.9.2 (https://github.com/pjotrp/bioruby-vcf)
     - tabix-0.2.6
     - vcftools-0.1.14
+    - zgrep, grep
 
 ### R libraries
     - VariantAnnotation
