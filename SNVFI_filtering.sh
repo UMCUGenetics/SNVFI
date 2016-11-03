@@ -43,12 +43,12 @@ fi
 # get sample names
 SAMPLES=($($run_GREP -P "^#CHROM" < $SNV))
 
-REF_NAME=${SAMPLES[ $(( $REF+8 )) ]}
+CON_NAME=${SAMPLES[ $(( $CON+8 )) ]}
 SUB_NAME=${SAMPLES[ $(( $SUB+8 )) ]}
 
-LOG=$OUT_DIR/$SUB_NAME"_"$REF_NAME"_filter-log.txt"
-ERR=$OUT_DIR/$SUB_NAME"_"$REF_NAME"_filter-err.txt"
-COUNTS=$OUT_DIR/$SUB_NAME"_"$REF_NAME"_filter-count.txt"
+LOG=$OUT_DIR/$SUB_NAME"_"$CON_NAME"_filter-log.txt"
+ERR=$OUT_DIR/$SUB_NAME"_"$CON_NAME"_filter-err.txt"
+COUNTS=$OUT_DIR/$SUB_NAME"_"$CON_NAME"_filter-count.txt"
 
 #get version
 INSTALL_DIR=$( cd $( dirname '${BASH_SOURCE[0]}' ) && pwd )
@@ -56,35 +56,35 @@ SCRIPT_NAME=`basename "$0"`
 VERSION=$INSTALL_DIR/$SCRIPT_NAME
 
 # -----------------------------------------------------------------------------
-# Print reference and subject sample names, as feedback for user
+# Print control and subject sample names, as feedback for user
 # -----------------------------------------------------------------------------
 techo $SUB_NAME" is used as the subject sample" >> $LOG
-techo $REF_NAME" is used as the reference sample" >> $LOG
+techo $CON_NAME" is used as the control sample" >> $LOG
 
 # make output file names
 s="_Q"$QUAL"_PASS_"$COV"X_autosomal.vcf"
-vcf_filtered="$OUT_DIR$SUB_NAME"_"$REF_NAME$s"
+vcf_filtered="$OUT_DIR$SUB_NAME"_"$CON_NAME$s"
 
 s="_Q"$QUAL"_PASS_"$COV"X_autosomal.vcf.gz"
-vcf_filtered_zip="$OUT_DIR$SUB_NAME"_"$REF_NAME$s"
+vcf_filtered_zip="$OUT_DIR$SUB_NAME"_"$CON_NAME$s"
 
 s="_Q"$QUAL"_PASS_"$COV"X_autosomal_nonBlacklist.vcf.gz"
-vcf_no_blacklist="$OUT_DIR$SUB_NAME"_"$REF_NAME$s"
+vcf_no_blacklist="$OUT_DIR$SUB_NAME"_"$CON_NAME$s"
 
-s="_Q"$QUAL"_PASS_"$COV"X_autosomal_nonBlacklist_noEvidenceRef.vcf"
-vcf_no_evidence_and_called="$OUT_DIR$SUB_NAME"_"$REF_NAME$s"
+s="_Q"$QUAL"_PASS_"$COV"X_autosomal_nonBlacklist_noEvidenceCon.vcf"
+vcf_no_evidence_and_called="$OUT_DIR$SUB_NAME"_"$CON_NAME$s"
 
-s="_Q"$QUAL"_PASS_"$COV"X_PNR"$PNR"_autosomal_nonBlacklist_final.vcf"
-vcf_final="$OUT_DIR$SUB_NAME"_"$REF_NAME$s"
+s="_Q"$QUAL"_PASS_"$COV"X_VAF"$VAF"_autosomal_nonBlacklist_final.vcf"
+vcf_final="$OUT_DIR$SUB_NAME"_"$CON_NAME$s"
 
-s="_PNR.pdf"
-pnr_plot_file="$OUT_DIR$SUB_NAME"_"$REF_NAME$s"
+s="_VAF.pdf"
+VAF_plot_file="$OUT_DIR$SUB_NAME"_"$CON_NAME$s"
 
 techo "(1) Filtering SNV file with bio_vcf STARTED" >> $LOG
-# bio vcf is zero based: subtract one from ref and sub index
+# bio vcf is zero based: subtract one from CON and sub index
 export TMPDIR=$TMP_DIR
 cat $SNV | $run_BIOVCF -i --num-threads $MAX_THREADS --thread-lines 50_000 --filter "r.filter=='PASS' and r.qual>=$QUAL and r.chrom.to_i>0 and r.chrom.to_i<23" \
---sfilter-samples $(($REF-1)),$(($SUB-1)) --sfilter "!s.empty? and s.dp>=$COV" 1>$vcf_filtered 2>>$ERR
+--sfilter-samples $(($CON-1)),$(($SUB-1)) --sfilter "!s.empty? and s.dp>=$COV" 1>$vcf_filtered 2>>$ERR
 $run_BGZIP -c $vcf_filtered 1> $vcf_filtered_zip 2>> $ERR
 $run_TABIX -p vcf $vcf_filtered_zip 2>> $ERR
 
@@ -101,7 +101,7 @@ COUNT=1
 vcf_tmp=$vcf_filtered_zip
 for vcf in "${BLACKLIST[@]}";
 do
-    OUT=$TMP_DIR/$SUB_NAME"_"$REF_NAME"_Q"$QUAL"_PASS_"$COV"X_autosomal_nonBlacklist_"$COUNT
+    OUT=$TMP_DIR/$SUB_NAME"_"$CON_NAME"_Q"$QUAL"_PASS_"$COV"X_autosomal_nonBlacklist_"$COUNT
         
     $run_VCFTOOLS --gzvcf $vcf_tmp --exclude-positions $vcf --recode --recode-INFO-all --out $OUT 2>>$ERR
     $run_BGZIP -c $OUT.recode.vcf > $OUT.recode.vcf.gz 2>>$ERR
@@ -121,7 +121,7 @@ techo "(2) Removing blacklisted SNPs from SNV file DONE" >> $LOG
 
 #Load appropriate R version
 techo "(3) Filtering SNV file with R STARTED" >> $LOG
-$run_RSCRIPT $RSCRIPT $vcf_no_blacklist $REF $SUB $PNR $vcf_no_evidence_and_called $vcf_final $pnr_plot_file 2>>$ERR
+$run_RSCRIPT $RSCRIPT $vcf_no_blacklist $CON $SUB $VAF $vcf_no_evidence_and_called $vcf_final $VAF_plot_file 2>>$ERR
 techo "(3) Filtering SNV file with R DONE" >> $LOG
 
 
@@ -132,7 +132,7 @@ vcf_final_tmp=$vcf_final"_tmp"
 
 TIME=`date +"%Y-%m-%d_%H:%M:%S"`
 #FINAL_HEADER=`grep -P "^#" $vcf_final`
-HEADER_ADD="##SNVFI_filtering=<Version=$VERSION, Date=$TIME, Tools='bio-vcf=$run_BIOVCF tabix=$run_TABIX vcftools=$run_VCFTOOLS rscript=$run_RSCRIPT', SNV=$SNV, SUB=$SUB, REF=$REF, OUT_DIR=$OUT_DIR, QUAL=$QUAL, COV=$COV, PNR=$PNR, BLACKLIST=["
+HEADER_ADD="##SNVFI_filtering=<Version=$VERSION, Date=$TIME, Tools='bio-vcf=$run_BIOVCF tabix=$run_TABIX vcftools=$run_VCFTOOLS rscript=$run_RSCRIPT', SNV=$SNV, SUB=$SUB, CON=$CON, OUT_DIR=$OUT_DIR, QUAL=$QUAL, COV=$COV, VAF=$VAF, BLACKLIST=["
 HEADER_ADD+=`join , ${BLACKLIST[@]}`
 HEADER_ADD+="]>"
 
@@ -145,10 +145,10 @@ mv $vcf_final_tmp $vcf_final
 techo "(4) Writing info on mutation numbers to log file STARTED" >> $LOG
 
 # Write info on mutations numbers to log file
-echo "No evidence reference and called:" >> $COUNTS
+echo "No evidence control and called:" >> $COUNTS
 $run_GREP -Pvc "^#" $vcf_no_evidence_and_called >> $COUNTS
 
-echo "Called and PNR > $PNR in subject:" >> $COUNTS
+echo "Called and VAF > $VAF in subject:" >> $COUNTS
 $run_GREP -Pvc "^#" $vcf_final >> $COUNTS
 
 techo "(4) Writing info on mutation numbers to log file DONE" >> $LOG

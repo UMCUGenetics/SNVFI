@@ -48,8 +48,8 @@ if [ ! -f $SNV ]; then
     printf "VCF file '$SNV' specified as SNV in $ini not found or empty!\n"
     exit 1
 fi
-if [ ! $REF ]; then
-    printf "No REF column specified in $ini!\n"
+if [ ! $CON ]; then
+    printf "No CON column specified in $ini!\n"
     exit 1
 fi
 if [ ! $SUB ]; then
@@ -83,8 +83,8 @@ if [ ! $COV ]; then
     printf "Minimum Quality score specified as COV in $ini not found!\n"
     exit 1
 fi
-if [ ! $PNR ]; then
-    printf "PNR specified as PNR in $ini not found!\n"
+if [ ! $VAF ]; then
+    printf "VAF specified as VAF in $ini not found!\n"
     exit 1
 fi
 
@@ -109,7 +109,7 @@ printf "\tRSCRIPT : $RSCRIPT\n"
 printf "\tMAX_THREADS : $MAX_THREADS\n"
 
 printf "\tSNV : $SNV\n"
-printf "\tREF : $REF\n"
+printf "\tCON : $CON\n"
 printf "\tSUB : $SUB\n"
 printf "\tOUT_DIR : $OUT_DIR\n"
 printf "\tBLACKLIST :\n"
@@ -122,7 +122,7 @@ done
 
 printf "\tQUAL : $QUAL\n"
 printf "\tCOV : $COV\n"
-printf "\tPNR : $PNR\n"
+printf "\tVAF : $VAF\n"
 printf "\tMAIL : $MAIL\n"
 printf "\tCLEANUP : $CLEANUP\n"
 
