@@ -41,6 +41,9 @@ fi
 if [ ! "$MAX_THREADS" ]; then
     printf "Maximum threads specified as MAX_THREADS in $config not found or empty!\n"
 fi
+if [ ! "$SGE" ]; then
+    printf "Please specify whether you want to use the Sun Grid Engine or not. Use SGE=<YES|NO>\n"
+fi
 
 
 ###########################Check parameters in ini###################################
@@ -135,8 +138,11 @@ JOB_SCRIPT=$OUT_DIR/$JOB_ID.sh
 
 echo "$SNVFI_ROOT/SNVFI_filtering.sh $config $ini" >> $JOB_SCRIPT
 
-qsub -q all.q -P cog_bioinf -pe threaded $MAX_THREADS -l h_rt=2:0:0 -l h_vmem=10G -N $JOB_ID -e $JOB_ERR -o $JOB_LOG -m a -M $MAIL $JOB_SCRIPT
-
+if [ "$SGE" == "YES" ]; then
+    qsub -q all.q -P cog_bioinf -pe threaded $MAX_THREADS -l h_rt=2:0:0 -l h_vmem=10G -N $JOB_ID -e $JOB_ERR -o $JOB_LOG -m a -M $MAIL $JOB_SCRIPT
+else
+    sh $JOB_SCRIPT 1>> $JOB_LOG 2>> $JOB_ERR
+fi
 
 
 
