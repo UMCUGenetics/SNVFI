@@ -16,19 +16,21 @@ SNVFI is configured using a config file, and an ini file for each filtering run.
 
 ### Edit SVNFI_default.config
 ```bash
-    ROOT=<path to SNFVI install directory>
-    BIOVCF=<path to bio-vcf executable>
-    TABIX=<path to tabix>
-    VCFTOOLS=<path to vcftools>
+    SNVGI_ROOT=<path to SNFVI install directory>
+    BIOVCF_PREFIX=<path to bio-vcf executable>
+    TABIX_PREFIX=<path to tabix executable>
+    VCFTOOLS_PREFIX=<path to vcftools executable>
+    R_PREFIX=<path to R executable>
     RSCRIPT=<path to SNVFI_filtering_R.R R-script>
     MAX_THREADS=<maximum number of threads used by SNFVI>
+    SGE=<YES|NO> #Use Sun Grid Engine yes or no
 ```
 
 ### Edit SNVFI_dummy.ini
 ```bash
     SNV=<Path to input vcf>
     SUB=<Subject column in vcf>
-    REF=<Reference column in vcf>
+    CON=<Control column in vcf>
     OUT_DIR=<Output directory>
 
     BLACKLIST=(
@@ -38,7 +40,7 @@ SNVFI is configured using a config file, and an ini file for each filtering run.
 
     QUAL=<Minimum quality threshold>
     COV=<Minimum coverage threshold>
-    PNR=<PNR threshold>
+    VAF=<Variant Allele Frequency threshold>
 
     MAIL=<Mail address for qsub>
 
