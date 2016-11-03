@@ -13,29 +13,36 @@ source $ini
 
 ##########################Check parameters in config##################################
 
+
 if [ ! -d "$SNVFI_ROOT" ]; then
     printf "Installation directory '$SNVFI_ROOT' specified as SNVFI_ROOT in $config not found!\n"
     exit 1
 fi
-if [ ! -f "$BIOVCF" ]; then
-    printf "Path to biovcf '$BIOVCF' specified as BIOVCF in $config not found or empty!\n"
+if [ ! -d "$BIOVCF_PREFIX" ]; then
+    printf "biovcf directory '$BIOVCF_PREFIX' specified as BIOVCF_PREFIX in $config not found or empty!\n"
     exit 1
 fi
-if [ ! -d "$TABIX" ]; then
-    printf "Tabix directory '$TABIX' specified as TABIX in $config not found or empty!\n"
+if [ ! -d "$TABIX_PREFIX" ]; then
+    printf "tabix directory '$TABIX_PREFIX' specified as TABIX_PREFIX in $config not found or empty!\n"
     exit 1
 fi
-if [ ! -d "$VCFTOOLS" ]; then
-    printf "Path to vcftools binaries '$VCFTOOLS' specified as VCFTOOLS in $config not found or empty!\n"
+if [ ! -d "$VCFTOOLS_PREFIX" ]; then
+    printf "vcftools directory '$VCFTOOLS_PREFIX' specified as VCFTOOLS_PREFIX in $config not found or empty!\n"
+    exit 1
+fi
+if [ ! -d "$R_PREFIX" ]; then
+    printf "R directory '$R_PREFIX' specified as R_PREFIX in $config not found or empty!\n"
     exit 1
 fi
 if [ ! -f "$RSCRIPT" ]; then
     printf "Filtering rscript '$RSCRIPT' specified as RSCRIPT in $config not found or empty!\n"
     exit 1
 fi
-
 if [ ! "$MAX_THREADS" ]; then
     printf "Maximum threads specified as MAX_THREADS in $config not found or empty!\n"
+fi
+if [ ! "$SGE" ]; then
+    printf "Please specify whether you want to use the Sun Grid Engine or not. Use SGE=<YES|NO>\n"
 fi
 
 
@@ -44,8 +51,8 @@ if [ ! -f $SNV ]; then
     printf "VCF file '$SNV' specified as SNV in $ini not found or empty!\n"
     exit 1
 fi
-if [ ! $REF ]; then
-    printf "No REF column specified in $ini!\n"
+if [ ! $CON ]; then
+    printf "No CON column specified in $ini!\n"
     exit 1
 fi
 if [ ! $SUB ]; then
@@ -79,8 +86,8 @@ if [ ! $COV ]; then
     printf "Minimum Quality score specified as COV in $ini not found!\n"
     exit 1
 fi
-if [ ! $PNR ]; then
-    printf "PNR specified as PNR in $ini not found!\n"
+if [ ! $VAF ]; then
+    printf "VAF specified as VAF in $ini not found!\n"
     exit 1
 fi
 
@@ -97,17 +104,19 @@ fi
 
 
 printf "Running filtering with the following settings:\n"
-printf "\tBIOVCF : $BIOVCF\n"
-printf "\tTABIX : $TABIX\n"
-printf "\tVCFTOOLS : $VCFTOOLS\n"
+printf "\tBIOVCF : $BIOVCF_PREFIX\n"
+printf "\tTABIX : $TABIX_PREFIX\n"
+printf "\tVCFTOOLS : $VCFTOOLS_PREFIX\n"
+printf "\tR VERSION : $R_PREFIX\n"
 printf "\tRSCRIPT : $RSCRIPT\n"
 printf "\tMAX_THREADS : $MAX_THREADS\n"
 
 printf "\tSNV : $SNV\n"
-printf "\tREF : $REF\n"
+printf "\tCON : $CON\n"
 printf "\tSUB : $SUB\n"
 printf "\tOUT_DIR : $OUT_DIR\n"
 printf "\tBLACKLIST :\n"
+
 
 for vcf in "${BLACKLIST[@]}";
 do
@@ -116,7 +125,7 @@ done
 
 printf "\tQUAL : $QUAL\n"
 printf "\tCOV : $COV\n"
-printf "\tPNR : $PNR\n"
+printf "\tVAF : $VAF\n"
 printf "\tMAIL : $MAIL\n"
 printf "\tCLEANUP : $CLEANUP\n"
 
@@ -129,8 +138,11 @@ JOB_SCRIPT=$OUT_DIR/$JOB_ID.sh
 
 echo "$SNVFI_ROOT/SNVFI_filtering.sh $config $ini" >> $JOB_SCRIPT
 
-qsub -q all.q -P cog_bioinf -pe threaded $MAX_THREADS -l h_rt=2:0:0 -l h_vmem=10G -N $JOB_ID -e $JOB_ERR -o $JOB_LOG -m a -M $MAIL $JOB_SCRIPT
-
+if [ "$SGE" == "YES" ]; then
+    qsub -q all.q -P cog_bioinf -pe threaded $MAX_THREADS -l h_rt=2:0:0 -l h_vmem=10G -N $JOB_ID -e $JOB_ERR -o $JOB_LOG -m a -M $MAIL $JOB_SCRIPT
+else
+    sh $JOB_SCRIPT 1>> $JOB_LOG 2>> $JOB_ERR
+fi
 
 
 
