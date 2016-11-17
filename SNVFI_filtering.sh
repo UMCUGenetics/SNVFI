@@ -11,26 +11,28 @@
 function join { local IFS="$1"; shift; echo "$*"; }
 function techo { echo `date +"%Y-%m-%d_%H:%M:%S"`": "$*; }
 
+# Config file containing paths to tools
+runtime_config=$1
 
-# Read default configuration file
-config=$1
-ini=$2
+# Config file containing run-time configuration of the job(s)
+runtime_settings=$2
 
-source $config
-source $ini
+#Load parameters
+source $runtime_config
+source $runtime_settings
 
 # -----------------------------------------------------------------------------
 # Define absolute paths to external programs
 # -----------------------------------------------------------------------------
 
 
-run_RSCRIPT="$R_PREFIX"Rscript
-run_VCFTOOLS="$VCFTOOLS_PREFIX"vcftools
-run_BGZIP="$TABIX_PREFIX"bgzip
-run_TABIX="$TABIX_PREFIX"tabix
-run_BIOVCF="$BIOVCF_PREFIX"bio-vcf
-run_GREP="$GREP_PREFIX"grep
-run_ZGREP="$ZGREP_PREFIX"zgrep
+run_RSCRIPT=Rscript
+run_VCFTOOLS=vcftools
+run_BGZIP=bgzip
+run_TABIX=tabix
+run_BIOVCF=bio-vcf
+run_GREP=grep
+run_ZGREP=zgrep
 
 # create tmp dir and log-files
 TMP_DIR=$OUT_DIR/tmp
@@ -43,8 +45,8 @@ fi
 # get sample names
 SAMPLES=($($run_GREP -P "^#CHROM" < $SNV))
 
-CON_NAME=${SAMPLES[ $(( $CON+8 )) ]}
-SUB_NAME=${SAMPLES[ $(( $SUB+8 )) ]}
+CON_NAME=${SAMPLES[ $(( $CONTROL+8 )) ]}
+SUB_NAME=${SAMPLES[ $(( $SUBJECT+8 )) ]}
 
 LOG=$OUT_DIR/$SUB_NAME"_"$CON_NAME"_filter-log.txt"
 ERR=$OUT_DIR/$SUB_NAME"_"$CON_NAME"_filter-err.txt"
@@ -62,19 +64,19 @@ techo $SUB_NAME" is used as the subject sample" >> $LOG
 techo $CON_NAME" is used as the control sample" >> $LOG
 
 # make output file names
-s="_Q"$QUAL"_PASS_"$COV"X_autosomal.vcf"
+s="_Q"$MINIMUM_QUALITY"_PASS_"$MINIMUM_COVERAGE"X_autosomal.vcf"
 vcf_filtered="$OUT_DIR$SUB_NAME"_"$CON_NAME$s"
 
-s="_Q"$QUAL"_PASS_"$COV"X_autosomal.vcf.gz"
+s="_Q"$MINIMUM_QUALITY"_PASS_"$MINIMUM_COVERAGE"X_autosomal.vcf.gz"
 vcf_filtered_zip="$OUT_DIR$SUB_NAME"_"$CON_NAME$s"
 
-s="_Q"$QUAL"_PASS_"$COV"X_autosomal_nonBlacklist.vcf.gz"
+s="_Q"$MINIMUM_QUALITY"_PASS_"$MINIMUM_COVERAGE"X_autosomal_nonBlacklist.vcf.gz"
 vcf_no_blacklist="$OUT_DIR$SUB_NAME"_"$CON_NAME$s"
 
-s="_Q"$QUAL"_PASS_"$COV"X_autosomal_nonBlacklist_noEvidenceCon.vcf"
+s="_Q"$MINIMUM_QUALITY"_PASS_"$MINIMUM_COVERAGE"X_autosomal_nonBlacklist_noEvidenceCon.vcf"
 vcf_no_evidence_and_called="$OUT_DIR$SUB_NAME"_"$CON_NAME$s"
 
-s="_Q"$QUAL"_PASS_"$COV"X_VAF"$VAF"_autosomal_nonBlacklist_final.vcf"
+s="_Q"$MINIMUM_QUALITY"_PASS_"$MINIMUM_COVERAGE"X_VAF"$VAF"_autosomal_nonBlacklist_final.vcf"
 vcf_final="$OUT_DIR$SUB_NAME"_"$CON_NAME$s"
 
 s="_VAF.pdf"
@@ -83,8 +85,8 @@ VAF_plot_file="$OUT_DIR$SUB_NAME"_"$CON_NAME$s"
 techo "(1) Filtering SNV file with bio_vcf STARTED" >> $LOG
 # bio vcf is zero based: subtract one from CON and sub index
 export TMPDIR=$TMP_DIR
-cat $SNV | $run_BIOVCF -i --num-threads $MAX_THREADS --thread-lines 50_000 --filter "r.filter=='PASS' and r.qual>=$QUAL and r.chrom.to_i>0 and r.chrom.to_i<23" \
---sfilter-samples $(($CON-1)),$(($SUB-1)) --sfilter "!s.empty? and s.dp>=$COV" 1>$vcf_filtered 2>>$ERR
+cat $SNV | $run_BIOVCF -i --num-threads $MAXIMUM_THREADS --thread-lines 50_000 --filter "r.filter=='PASS' and r.qual>=$MINIMUM_QUALITY and r.chrom.to_i>0 and r.chrom.to_i<23" \
+--sfilter-samples $(($CONTROL-1)),$(($SUBJECT-1)) --sfilter "!s.empty? and s.dp>=$MINIMUM_COVERAGE" 1>$vcf_filtered 2>>$ERR
 $run_BGZIP -c $vcf_filtered 1> $vcf_filtered_zip 2>> $ERR
 $run_TABIX -p vcf $vcf_filtered_zip 2>> $ERR
 
@@ -93,7 +95,7 @@ techo "(1) Filtering SNV file with bio_vcf DONE" >> $LOG
 echo "Input file:" > $COUNTS
 $run_GREP -Pvc "^#" $SNV >> $COUNTS
 
-echo "Q"$QUAL" PASS "$COV"X autosomal:" >> $COUNTS
+echo "Q"$MINIMUM_QUALITY" PASS "$MINIMUM_COVERAGE"X autosomal:" >> $COUNTS
 $run_GREP -Pvc "^#" $vcf_filtered >> $COUNTS
 
 techo "(2) Removing blacklisted SNPs from SNV file STARTED" >> $LOG
@@ -101,7 +103,7 @@ COUNT=1
 vcf_tmp=$vcf_filtered_zip
 for vcf in "${BLACKLIST[@]}";
 do
-    OUT=$TMP_DIR/$SUB_NAME"_"$CON_NAME"_Q"$QUAL"_PASS_"$COV"X_autosomal_nonBlacklist_"$COUNT
+    OUT=$TMP_DIR/$SUB_NAME"_"$CON_NAME"_Q"$MINIMUM_QUALITY"_PASS_"$MINIMUM_COVERAGE"X_autosomal_nonBlacklist_"$COUNT
         
     $run_VCFTOOLS --gzvcf $vcf_tmp --exclude-positions $vcf --recode --recode-INFO-all --out $OUT 2>>$ERR
     $run_BGZIP -c $OUT.recode.vcf > $OUT.recode.vcf.gz 2>>$ERR
@@ -121,7 +123,7 @@ techo "(2) Removing blacklisted SNPs from SNV file DONE" >> $LOG
 
 #Load appropriate R version
 techo "(3) Filtering SNV file with R STARTED" >> $LOG
-$run_RSCRIPT $RSCRIPT $vcf_no_blacklist $CON $SUB $VAF $vcf_no_evidence_and_called $vcf_final $VAF_plot_file 2>>$ERR
+$run_RSCRIPT $RSCRIPT $vcf_no_blacklist $CONTROL $SUBJECT $VAF $vcf_no_evidence_and_called $vcf_final $VAF_plot_file 2>>$ERR
 techo "(3) Filtering SNV file with R DONE" >> $LOG
 
 
@@ -132,7 +134,7 @@ vcf_final_tmp=$vcf_final"_tmp"
 
 TIME=`date +"%Y-%m-%d_%H:%M:%S"`
 #FINAL_HEADER=`grep -P "^#" $vcf_final`
-HEADER_ADD="##SNVFI_filtering=<Version=$VERSION, Date=$TIME, Tools='bio-vcf=$run_BIOVCF tabix=$run_TABIX vcftools=$run_VCFTOOLS rscript=$run_RSCRIPT', SNV=$SNV, SUB=$SUB, CON=$CON, OUT_DIR=$OUT_DIR, QUAL=$QUAL, COV=$COV, VAF=$VAF, BLACKLIST=["
+HEADER_ADD="##SNVFI_filtering=<Version=$VERSION, Date=$TIME, Tools='bio-vcf=$run_BIOVCF tabix=$run_TABIX vcftools=$run_VCFTOOLS rscript=$run_RSCRIPT', SNV=$SNV, SUB=$SUBJECT, CON=$CONTROL, OUT_DIR=$OUT_DIR, QUAL=$MINIMUM_QUALITY, COV=$MINIMUM_COVERAGE, VAF=$VAF, BLACKLIST=["
 HEADER_ADD+=`join , ${BLACKLIST[@]}`
 HEADER_ADD+="]>"
 
