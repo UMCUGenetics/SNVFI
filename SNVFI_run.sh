@@ -98,22 +98,22 @@ if [ ! $CLEANUP ]; then
 fi
 
 printf "Running filtering with the following settings:\n"
-printf "\tPATH            : $PATH\n"
-printf "\tMAXIMUM_THREADS : $MAXIMUM_THREADS\n"
-printf "\tSNV             : $SNV\n"
-printf "\tCONTROL         : $CONTROL\n"
-printf "\tSUBJECT         : $SUBJECT\n"
-printf "\tOUT_DIR         : $OUT_DIR\n"
-printf "\tBLACKLIST       :\n"
+printf "\tPATH             : $PATH\n"
+printf "\tMAXIMUM_THREADS  : $MAXIMUM_THREADS\n"
+printf "\tSNV              : $SNV\n"
+printf "\tCONTROL          : $CONTROL\n"
+printf "\tSUBJECT          : $SUBJECT\n"
+printf "\tOUTPUT_DIRECTORY : $OUTPUT_DIRECTORY\n"
+printf "\tBLACKLIST        :\n"
 
 for vcf in "${BLACKLIST[@]}";
 do
     printf "\t\t$vcf\n"
 done
 
-printf "\tMINIMUM_QUALITY : $MINIMUM_QUALITY\n"
-printf "\tMINIMUM_COVERAGE: $MINIMUM_COVERAGE\n"
-printf "\tMINIMUM_VAF     : $MINIMUM_VAF\n"
+printf "\tMINIMUM_QUALITY  : $MINIMUM_QUALITY\n"
+printf "\tMINIMUM_COVERAGE : $MINIMUM_COVERAGE\n"
+printf "\tMINIMUM_VAF      : $MINIMUM_VAF\n"
 
 if [ $USE_SGE == "YES" ]; then
     printf "\tMAIL            : $MAIL\n"
@@ -124,9 +124,9 @@ printf "\tCLEANUP         : $CLEANUP\n"
 
 # Create job script
 JOB_ID=SNVFI_Filtering_`date | md5sum | cut -d' ' -f1`
-JOB_LOG=$OUT_DIR/$JOB_ID.log
-JOB_ERR=$OUT_DIR/$JOB_ID.err
-JOB_SCRIPT=$OUT_DIR/$JOB_ID.sh
+JOB_LOG=$OUTPUT_DIRECTORY/$JOB_ID.log
+JOB_ERR=$OUTPUT_DIRECTORY/$JOB_ID.err
+JOB_SCRIPT=$OUTPUT_DIRECTORY/$JOB_ID.sh
 
 echo "$SNVFI_ROOT/SNVFI_filtering.sh $runtime_config $runtime_settings" >> $JOB_SCRIPT
 
