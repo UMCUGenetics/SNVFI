@@ -1,72 +1,62 @@
 #Config file containing paths to tools
-config=$1
+runtime_config=$1
 #Ini file for this specific filtering run
-ini=$2
-
-#echo $config
-#echo $ini
-
+runtime_settings=$2
 
 #Load parameters
-source $config
-source $ini
+source $runtime_config
+source $runtime_settings
 
-##########################Check parameters in config##################################
+######################Check parameters in config##############################
 
 
 if [ ! -d "$SNVFI_ROOT" ]; then
-    printf "Installation directory '$SNVFI_ROOT' specified as SNVFI_ROOT in $config not found!\n"
-    exit 1
+    SNVFI_ROOT=`dirname $0`
+
+    if [ $SNVFI_ROOT == "." ]; then
+        SNVFI_ROOT=`pwd`
+    fi
+
+    printf "Using $SNVFI_ROOT as SNVFI_ROOT\n"
+    printf "Please set SNVFI_ROOT=<path/to/this/script> in $runtime_config "
+    printf "in the future.\n"
 fi
-if [ ! -d "$BIOVCF_PREFIX" ]; then
-    printf "biovcf directory '$BIOVCF_PREFIX' specified as BIOVCF_PREFIX in $config not found or empty!\n"
-    exit 1
+if [ ! "$MAXIMUM_THREADS" ]; then
+    printf "Maximum threads specified as MAXIMUM_THREADS in $runtime_settings "
+    printf "not found or empty.  Setting to 1.\n"
+    MAXIMUM_THREADS=1
 fi
-if [ ! -d "$TABIX_PREFIX" ]; then
-    printf "tabix directory '$TABIX_PREFIX' specified as TABIX_PREFIX in $config not found or empty!\n"
-    exit 1
-fi
-if [ ! -d "$VCFTOOLS_PREFIX" ]; then
-    printf "vcftools directory '$VCFTOOLS_PREFIX' specified as VCFTOOLS_PREFIX in $config not found or empty!\n"
-    exit 1
-fi
-if [ ! -d "$R_PREFIX" ]; then
-    printf "R directory '$R_PREFIX' specified as R_PREFIX in $config not found or empty!\n"
-    exit 1
-fi
-if [ ! -f "$RSCRIPT" ]; then
-    printf "Filtering rscript '$RSCRIPT' specified as RSCRIPT in $config not found or empty!\n"
-    exit 1
-fi
-if [ ! "$MAX_THREADS" ]; then
-    printf "Maximum threads specified as MAX_THREADS in $config not found or empty!\n"
-fi
-if [ ! "$SGE" ]; then
-    printf "Please specify whether you want to use the Sun Grid Engine or not. Use SGE=<YES|NO>\n"
+if [ ! "$USE_SGE" ]; then
+    printf "Assuming we do not use the Sun Grid Engine.  "
+    printf "Put \"USE_SGE=YES\" in your config file to enable.\n"
+    USE_SGE=NO
 fi
 
 
-###########################Check parameters in ini###################################
+#######################Check parameters in ini##############################
 if [ ! -f $SNV ]; then
-    printf "VCF file '$SNV' specified as SNV in $ini not found or empty!\n"
+    printf "VCF file '$SNV' specified as SNV in $runtime_settings not found "
+    printf "or empty!\n"
     exit 1
 fi
-if [ ! $CON ]; then
-    printf "No CON column specified in $ini!\n"
+if [ ! $CONTROL ]; then
+    printf "No CONTROL column specified in $runtime_settings!\n"
     exit 1
 fi
-if [ ! $SUB ]; then
-    printf "No SUB column specified in $ini!\n"
+if [ ! $SUBJECT ]; then
+    printf "No SUBJECT column specified in $runtime_settings!\n"
     exit 1
 fi
-if [ ! -d "$OUT_DIR" ]; then
-    printf "Output directory '$OUT_DIR' specified as OUT_DIR in $ini not found or empty!\n"
+if [ ! -d "$OUTPUT_DIRECTORY" ]; then
+    printf "Output directory '$OUT_DIR' specified as OUTPUT_DIRECTORY in "
+    printf "$runtime_settings not found or empty!\n"
     exit 1
 fi
 
 if [ ! "$BLACKLIST" ]; then
 
-    printf "No blacklist vcf's found. Specified as BLACKLIST array in $ini!\n"
+    printf "No blacklist vcf's found. Specified as BLACKLIST array in "
+    printf "$runtime_settings!\n"
     exit 1
 else
     for vcf in "${BLACKLIST[@]}";
@@ -78,68 +68,70 @@ else
 fi
 
 
-if [ ! $QUAL ]; then
-    printf "Minimum Quality score specified as QUAL in $ini not found!\n"
+if [ ! $MINIMUM_QUALITY ]; then
+    printf "Minimum Quality score specified as MINIMUM_QUALITY in "
+    printf "$runtime_settings not found!\n"
     exit 1
 fi
-if [ ! $COV ]; then
-    printf "Minimum Quality score specified as COV in $ini not found!\n"
+if [ ! $MINIMUM_COVERAGE ]; then
+    printf "Minimum Quality score specified as MINIMUM_COVERAGE in "
+    printf "$runtime_settings not found!\n"
     exit 1
 fi
-if [ ! $VAF ]; then
-    printf "VAF specified as VAF in $ini not found!\n"
+if [ ! $MINIMUM_VAF ]; then
+    printf "VAF specified as MINIMUM_VAF in $runtime_settings not found!\n"
     exit 1
 fi
 
-if [ ! $MAIL ]; then
-    printf "Mail adress specified as MAIL in $ini not found!\n"
+if [ $USE_SGE == "YES" ] && [ ! $MAIL ]; then
+    printf "You indicated to use the Sun Grid Engine, but you haven't set an "
+    printf "e-mail address.  Please add MAIL=<your@address.tld> to "
+    printf "$runtime_settings"
     exit 1
 fi
 
 if [ ! $CLEANUP ]; then
-    printf "Please specify if you want to clean up in-between files. Specify as CLEANUP=YES|NO in $ini!\n"
-    exit
+    printf "Assuming we do not clean up after a succesful run."
+    printf "Please specify if you want to clean up in-between files.  "
+    printf "Put \"CLEANUP=YES\" in $runtime_settings to clean up next time.\n"
+    CLEANUP=NO
 fi
 
-
-
 printf "Running filtering with the following settings:\n"
-printf "\tBIOVCF : $BIOVCF_PREFIX\n"
-printf "\tTABIX : $TABIX_PREFIX\n"
-printf "\tVCFTOOLS : $VCFTOOLS_PREFIX\n"
-printf "\tR VERSION : $R_PREFIX\n"
-printf "\tRSCRIPT : $RSCRIPT\n"
-printf "\tMAX_THREADS : $MAX_THREADS\n"
-
-printf "\tSNV : $SNV\n"
-printf "\tCON : $CON\n"
-printf "\tSUB : $SUB\n"
-printf "\tOUT_DIR : $OUT_DIR\n"
-printf "\tBLACKLIST :\n"
-
+printf "\tPATH            : $PATH\n"
+printf "\tMAXIMUM_THREADS : $MAXIMUM_THREADS\n"
+printf "\tSNV             : $SNV\n"
+printf "\tCONTROL         : $CONTROL\n"
+printf "\tSUBJECT         : $SUBJECT\n"
+printf "\tOUT_DIR         : $OUT_DIR\n"
+printf "\tBLACKLIST       :\n"
 
 for vcf in "${BLACKLIST[@]}";
 do
     printf "\t\t$vcf\n"
 done
 
-printf "\tQUAL : $QUAL\n"
-printf "\tCOV : $COV\n"
-printf "\tVAF : $VAF\n"
-printf "\tMAIL : $MAIL\n"
-printf "\tCLEANUP : $CLEANUP\n"
+printf "\tMINIMUM_QUALITY : $MINIMUM_QUALITY\n"
+printf "\tMINIMUM_COVERAGE: $MINIMUM_COVERAGE\n"
+printf "\tMINIMUM_VAF     : $MINIMUM_VAF\n"
 
-#Create job script
+if [ $USE_SGE == "YES" ]; then
+    printf "\tMAIL            : $MAIL\n"
+fi;
 
+printf "\tCLEANUP         : $CLEANUP\n"
+
+
+# Create job script
 JOB_ID=SNVFI_Filtering_`date | md5sum | cut -d' ' -f1`
 JOB_LOG=$OUT_DIR/$JOB_ID.log
 JOB_ERR=$OUT_DIR/$JOB_ID.err
 JOB_SCRIPT=$OUT_DIR/$JOB_ID.sh
 
-echo "$SNVFI_ROOT/SNVFI_filtering.sh $config $ini" >> $JOB_SCRIPT
+echo "$SNVFI_ROOT/SNVFI_filtering.sh $runtime_config $runtime_settings" >> $JOB_SCRIPT
 
-if [ "$SGE" == "YES" ]; then
-    qsub -q all.q -P cog_bioinf -pe threaded $MAX_THREADS -l h_rt=2:0:0 -l h_vmem=10G -N $JOB_ID -e $JOB_ERR -o $JOB_LOG -m a -M $MAIL $JOB_SCRIPT
+if [ "$USE_SGE" == "YES" ]; then
+    qsub -q all.q -P cog_bioinf -pe threaded $MAXIMUM_THREADS -l h_rt=2:0:0 -l h_vmem=10G -N $JOB_ID -e $JOB_ERR -o $JOB_LOG -m a -M $MAIL $JOB_SCRIPT
 else
     sh $JOB_SCRIPT 1>> $JOB_LOG 2>> $JOB_ERR
 fi
