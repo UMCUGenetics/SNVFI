@@ -1,5 +1,6 @@
+#!/bin/bash
 # @Date: 02-02-2016
-# @Author(s): Francis Blokzijl, Sander Boymans
+# @Author(s): Francis Blokzijl, Sander Boymans, Roel Janssen
 # @Title: SNVFI 
 # @Description: Pipeline for filtering somatic SNVs for clonal (organoid) cultures
 # @Args: (1) Path to .cfg file containing paths to tools. (2) Path to .ini file containing

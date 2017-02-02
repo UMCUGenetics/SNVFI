@@ -1,3 +1,4 @@
+#!/bin/bash
 #Config file containing paths to tools
 config=$1
 #Ini file for this specific filtering run

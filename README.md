@@ -12,11 +12,13 @@ Alternatively use git clone:
 ```
 
 ## Usage
-SNVFI is configured using a config file, and an ini file for each filtering run. In most scenarios you'll create the config file once and create an ini file per filtering run.
+SNVFI is configured using a config file, and an ini file for each filtering
+run.  In most scenarios you'll create the config file once and create an ini
+file per filtering run.
 
 ### Edit SVNFI_default.config
 ```bash
-    SNVGI_ROOT=<path to SNFVI install directory>
+    SNVFI_ROOT=<path to SNFVI install directory>
     BIOVCF_PREFIX=<path to bio-vcf executable>
     TABIX_PREFIX=<path to tabix executable>
     VCFTOOLS_PREFIX=<path to vcftools executable>
@@ -55,16 +57,16 @@ SNVFI is configured using a config file, and an ini file for each filtering run.
 ## Dependencies
 
 ### OS
-    - CentOS Linux release 7.2.1511 (should work on any Linux system)
+    - GNU/Linux (tested on CentOS Linux release 7.2.1511
 
 ### Grid Engine
-    - Sun Grid Engine (tested on SGE 8.1.8)
-    
+    - (optional) Sun Grid Engine (tested on SGE 8.1.8)
+
 ### Standalone tools
-    - R 3.2.2
-    - bio-vcf 0.9.2 (https://github.com/pjotrp/bioruby-vcf)
-    - tabix-0.2.6
-    - vcftools-0.1.14
+    - R >= 3.2.2 (https://www.r-project.org)
+    - bio-vcf 0.9.2 (https://rubygems.org/gems/bio-vcf/versions/0.9.2)
+    - tabix 0.2.6 (http://www.htslib.org)
+    - vcftools 0.1.14 (https://vcftools.github.io)
     - zgrep, grep
 
 ### R libraries
