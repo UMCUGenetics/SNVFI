@@ -92,7 +92,7 @@ if [ ! $VAF ]; then
     exit 1
 fi
 
-if [ ! $MAIL ]; then
+if [ ! $MAIL && "$SGE" == "YES" ]; then
     printf "Mail adress specified as MAIL in $ini not found!\n"
     exit 1
 fi
