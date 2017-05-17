@@ -1,6 +1,6 @@
 # @Date: 02-02-2016
 # @Author(s): Francis Blokzijl, Sander Boymans
-# @Title: SNVFI 
+# @Title: SNVFI
 # @Description: Pipeline for filtering somatic SNVs for clonal (organoid) cultures
 # @Args: (1) Path to .cfg file containing paths to tools. (2) Path to .ini file containing
 # job specific settings
@@ -61,20 +61,22 @@ VERSION=$INSTALL_DIR/$SCRIPT_NAME
 techo $SUB_NAME" is used as the subject sample" >> $LOG
 techo $CON_NAME" is used as the control sample" >> $LOG
 
+
+
 # make output file names
-s="_Q"$QUAL"_PASS_"$COV"X_autosomal.vcf"
+s="_Q"$QUAL"_"$FILTER"_"$COV"X_autosomal.vcf"
 vcf_filtered="$OUT_DIR$SUB_NAME"_"$CON_NAME$s"
 
-s="_Q"$QUAL"_PASS_"$COV"X_autosomal.vcf.gz"
+s="_Q"$QUAL"_"$FILTER"_"$COV"X_autosomal.vcf.gz"
 vcf_filtered_zip="$OUT_DIR$SUB_NAME"_"$CON_NAME$s"
 
-s="_Q"$QUAL"_PASS_"$COV"X_autosomal_nonBlacklist.vcf.gz"
+s="_Q"$QUAL"_"$FILTER"_"$COV"X_autosomal_nonBlacklist.vcf.gz"
 vcf_no_blacklist="$OUT_DIR$SUB_NAME"_"$CON_NAME$s"
 
-s="_Q"$QUAL"_PASS_"$COV"X_autosomal_nonBlacklist_noEvidenceCon.vcf"
+s="_Q"$QUAL"_"$FILTER"_"$COV"X_autosomal_nonBlacklist_noEvidenceCon.vcf"
 vcf_no_evidence_and_called="$OUT_DIR$SUB_NAME"_"$CON_NAME$s"
 
-s="_Q"$QUAL"_PASS_"$COV"X_VAF"$VAF"_autosomal_nonBlacklist_final.vcf"
+s="_Q"$QUAL"_"$FILTER"_"$COV"X_VAF"$VAF"_autosomal_nonBlacklist_final.vcf"
 vcf_final="$OUT_DIR$SUB_NAME"_"$CON_NAME$s"
 
 s="_VAF.pdf"
@@ -83,8 +85,17 @@ VAF_plot_file="$OUT_DIR$SUB_NAME"_"$CON_NAME$s"
 techo "(1) Filtering SNV file with bio_vcf STARTED" >> $LOG
 # bio vcf is zero based: subtract one from CON and sub index
 export TMPDIR=$TMP_DIR
-cat $SNV | $run_BIOVCF -i --num-threads $MAX_THREADS --thread-lines 50_000 --filter "r.filter=='PASS' and r.qual>=$QUAL and r.chrom.to_i>0 and r.chrom.to_i<23" \
---sfilter-samples $(($CON-1)),$(($SUB-1)) --sfilter "!s.empty? and s.dp>=$COV" 1>$vcf_filtered 2>>$ERR
+if [ $FILTER = "PASS" ]; then
+  cat $SNV | $run_BIOVCF -i --num-threads $MAX_THREADS --thread-lines 50_000 --filter "r.filter=='PASS' and r.qual>=$QUAL and r.chrom.to_i>0 and r.chrom.to_i<23" \
+  --sfilter-samples $(($CON-1)),$(($SUB-1)) --sfilter "!s.empty? and s.dp>=$COV" 1>$vcf_filtered 2>>$ERR
+elif [ $FILTER = "ALL" ]; then
+  cat $SNV | $run_BIOVCF -i --num-threads $MAX_THREADS --thread-lines 50_000 --filter "r.qual>=$QUAL and r.chrom.to_i>0 and r.chrom.to_i<23" \
+  --sfilter-samples $(($CON-1)),$(($SUB-1)) --sfilter "!s.empty? and s.dp>=$COV" 1>$vcf_filtered 2>>$ERR
+else
+  printf "$FILTER is not a valid value for FILTER (PASS | ALL)\n"
+  exit 1
+fi
+
 $run_BGZIP -c $vcf_filtered 1> $vcf_filtered_zip 2>> $ERR
 $run_TABIX -p vcf $vcf_filtered_zip 2>> $ERR
 
@@ -93,7 +104,7 @@ techo "(1) Filtering SNV file with bio_vcf DONE" >> $LOG
 echo "Input file:" > $COUNTS
 $run_GREP -Pvc "^#" $SNV >> $COUNTS
 
-echo "Q"$QUAL" PASS "$COV"X autosomal:" >> $COUNTS
+echo "Q"$QUAL" $FILTER "$COV"X autosomal:" >> $COUNTS
 $run_GREP -Pvc "^#" $vcf_filtered >> $COUNTS
 
 techo "(2) Removing blacklisted SNPs from SNV file STARTED" >> $LOG
@@ -101,15 +112,15 @@ COUNT=1
 vcf_tmp=$vcf_filtered_zip
 for vcf in "${BLACKLIST[@]}";
 do
-    OUT=$TMP_DIR/$SUB_NAME"_"$CON_NAME"_Q"$QUAL"_PASS_"$COV"X_autosomal_nonBlacklist_"$COUNT
-        
+    OUT=$TMP_DIR/$SUB_NAME"_"$CON_NAME"_Q"$QUAL"_"$FILTER"_"$COV"X_autosomal_nonBlacklist_"$COUNT
+
     $run_VCFTOOLS --gzvcf $vcf_tmp --exclude-positions $vcf --recode --recode-INFO-all --out $OUT 2>>$ERR
     $run_BGZIP -c $OUT.recode.vcf > $OUT.recode.vcf.gz 2>>$ERR
     $run_TABIX $OUT.recode.vcf.gz 2>>$ERR
 
     echo "Not in blacklist $vcf: " >> $COUNTS
     $run_ZGREP -Pvc "^#" $OUT.recode.vcf.gz >> $COUNTS
-    
+
     vcf_tmp=$OUT.recode.vcf.gz
     ((COUNT++))
 done
