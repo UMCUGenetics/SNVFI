@@ -26,6 +26,7 @@ file per filtering run.
     RSCRIPT=<path to SNVFI_filtering_R.R R-script>
     MAX_THREADS=<maximum number of threads used by SNFVI>
     SGE=<YES|NO> #Use Sun Grid Engine yes or no
+
 ```
 
 ### Edit SNVFI_dummy.ini
@@ -42,7 +43,9 @@ file per filtering run.
 
     QUAL=<Minimum quality threshold>
     COV=<Minimum coverage threshold>
+    FILTER=<Select either ALL variants or only PASS>
     VAF=<Variant Allele Frequency threshold>
+
 
     MAIL=<Mail address for qsub>
 

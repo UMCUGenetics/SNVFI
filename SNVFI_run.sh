@@ -92,7 +92,12 @@ if [ ! $VAF ]; then
     exit 1
 fi
 
-if [ ! $MAIL && "$SGE" == "YES" ]; then
+if [ ! $FILTER ]; then
+    printf "No value for FILTER found in $ini!\n"
+    exit 1
+fi
+
+if [ ! $MAIL ] && [ $SGE == "YES" ]; then
     printf "Mail adress specified as MAIL in $ini not found!\n"
     exit 1
 fi
@@ -111,6 +116,7 @@ printf "\tVCFTOOLS : $VCFTOOLS_PREFIX\n"
 printf "\tR VERSION : $R_PREFIX\n"
 printf "\tRSCRIPT : $RSCRIPT\n"
 printf "\tMAX_THREADS : $MAX_THREADS\n"
+printf "\tSGE : $SGE\n"
 
 printf "\tSNV : $SNV\n"
 printf "\tCON : $CON\n"
@@ -127,6 +133,7 @@ done
 printf "\tQUAL : $QUAL\n"
 printf "\tCOV : $COV\n"
 printf "\tVAF : $VAF\n"
+printf "\tFILTER : $FILTER\n"
 printf "\tMAIL : $MAIL\n"
 printf "\tCLEANUP : $CLEANUP\n"
 
@@ -139,11 +146,8 @@ JOB_SCRIPT=$OUT_DIR/$JOB_ID.sh
 
 echo "$SNVFI_ROOT/SNVFI_filtering.sh $config $ini" >> $JOB_SCRIPT
 
-if [ "$SGE" == "YES" ]; then
+if [ "$SGE" = "YES" ]; then
     qsub -q all.q -P cog_bioinf -pe threaded $MAX_THREADS -l h_rt=2:0:0 -l h_vmem=10G -N $JOB_ID -e $JOB_ERR -o $JOB_LOG -m a -M $MAIL $JOB_SCRIPT
 else
     sh $JOB_SCRIPT 1>> $JOB_LOG 2>> $JOB_ERR
 fi
-
-
-
