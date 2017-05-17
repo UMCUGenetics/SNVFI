@@ -22,6 +22,7 @@ SNVFI is configured using a config file, and an ini file for each filtering run.
     VCFTOOLS=<path to vcftools>
     RSCRIPT=<path to SNVFI_filtering_R.R R-script>
     MAX_THREADS=<maximum number of threads used by SNFVI>
+    SGE=<Specify whether to use SGE or not>
 ```
 
 ### Edit SNVFI_dummy.ini
@@ -39,6 +40,7 @@ SNVFI is configured using a config file, and an ini file for each filtering run.
     QUAL=<Minimum quality threshold>
     COV=<Minimum coverage threshold>
     PNR=<PNR threshold>
+    FILTER=<Select either ALL variants or only PASS>
 
     MAIL=<Mail address for qsub>
 
