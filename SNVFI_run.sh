@@ -83,6 +83,17 @@ if [ ! $QUAL ]; then
     printf "Minimum Quality score specified as QUAL in $ini not found!\n"
     exit 1
 fi
+if [ ! $SUB_GQ ]; then
+    printf "Minimum Genotype Quality Score in subject specified as SUB_GQ in $ini not found!\n"
+    exit 1
+fi
+if [ ! $CON_GQ ]; then
+    printf "Minimum Genotype Quality Score in control specified as CON_GQ in $ini not found!\n"
+    exit 1
+fi
+
+
+
 if [ ! $COV ]; then
     printf "Minimum Quality score specified as COV in $ini not found!\n"
     exit 1
@@ -130,7 +141,10 @@ do
     printf "\t\t$vcf\n"
 done
 
+
 printf "\tQUAL : $QUAL\n"
+printf "\tCON_GQ : $CON_GQ\n"
+printf "\tSUB_GQ : $SUB_GQ\n"
 printf "\tCOV : $COV\n"
 printf "\tVAF : $VAF\n"
 printf "\tFILTER : $FILTER\n"
