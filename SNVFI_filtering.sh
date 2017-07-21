@@ -2,7 +2,7 @@
 # @Date: 02-02-2016
 
 # @Author(s): Francis Blokzijl, Sander Boymans, Roel Janssen
-# @Title: SNVFI 
+# @Title: SNVFI
 
 # @Description: Pipeline for filtering somatic SNVs for clonal (organoid) cultures
 # @Args: (1) Path to .cfg file containing paths to tools. (2) Path to .ini file containing
@@ -66,20 +66,21 @@ techo $CON_NAME" is used as the control sample" >> $LOG
 
 
 
+
 # make output file names
-s="_Q"$QUAL"_"$FILTER"_"$COV"X_autosomal.vcf"
+s="_Q"$QUAL"_CGQ"$CON_GQ"_SGQ"$SUB_GQ"_"$FILTER"_"$COV"X_autosomal.vcf"
 vcf_filtered="$OUT_DIR$SUB_NAME"_"$CON_NAME$s"
 
-s="_Q"$QUAL"_"$FILTER"_"$COV"X_autosomal.vcf.gz"
+s="_Q"$QUAL"_CGQ"$CON_GQ"_SGQ"$SUB_GQ"_"$FILTER"_"$COV"X_autosomal.vcf.gz"
 vcf_filtered_zip="$OUT_DIR$SUB_NAME"_"$CON_NAME$s"
 
-s="_Q"$QUAL"_"$FILTER"_"$COV"X_autosomal_nonBlacklist.vcf.gz"
+s="_Q"$QUAL"_CGQ"$CON_GQ"_SGQ"$SUB_GQ"_"$FILTER"_"$COV"X_autosomal_nonBlacklist.vcf.gz"
 vcf_no_blacklist="$OUT_DIR$SUB_NAME"_"$CON_NAME$s"
 
-s="_Q"$QUAL"_"$FILTER"_"$COV"X_autosomal_nonBlacklist_noEvidenceCon.vcf"
+s="_Q"$QUAL"_CGQ"$CON_GQ"_SGQ"$SUB_GQ"_"$FILTER"_"$COV"X_autosomal_nonBlacklist_noEvidenceCon.vcf"
 vcf_no_evidence_and_called="$OUT_DIR$SUB_NAME"_"$CON_NAME$s"
 
-s="_Q"$QUAL"_"$FILTER"_"$COV"X_VAF"$VAF"_autosomal_nonBlacklist_final.vcf"
+s="_Q"$QUAL"_CGQ"$CON_GQ"_SGQ"$SUB_GQ"_"$FILTER"_"$COV"X_VAF"$VAF"_autosomal_nonBlacklist_final.vcf"
 vcf_final="$OUT_DIR$SUB_NAME"_"$CON_NAME$s"
 
 s="_VAF.pdf"
@@ -90,10 +91,16 @@ techo "(1) Filtering SNV file with bio_vcf STARTED" >> $LOG
 export TMPDIR=$TMP_DIR
 if [ $FILTER = "PASS" ]; then
   cat $SNV | $run_BIOVCF -i --num-threads $MAX_THREADS --thread-lines 50_000 --filter "r.filter=='PASS' and r.qual>=$QUAL and r.chrom.to_i>0 and r.chrom.to_i<23" \
-  --sfilter-samples $(($CON-1)),$(($SUB-1)) --sfilter "!s.empty? and s.dp>=$COV" 1>$vcf_filtered 2>>$ERR
+  --sfilter-samples $(($CON-1)),$(($SUB-1)) --sfilter "!s.empty? and s.dp>=$COV" 1>$vcf_filtered"tmp1" 2>>$ERR
+  cat $vcf_filtered"tmp1" | $run_BIOVCF -i --num-threads $MAX_THREADS --thread-lines 50_000 --sfilter-samples $(($CON-1)) --sfilter "s.gq>=$CON_GQ" 1>$vcf_filtered"tmp2" 2>>$ERR
+  cat $vcf_filtered"tmp2" | $run_BIOVCF -i --num-threads $MAX_THREADS --thread-lines 50_000 --sfilter-samples $(($SUB-1)) --sfilter "s.gq>=$SUB_GQ" 1>$vcf_filtered 2>>$ERR
+
 elif [ $FILTER = "ALL" ]; then
   cat $SNV | $run_BIOVCF -i --num-threads $MAX_THREADS --thread-lines 50_000 --filter "r.qual>=$QUAL and r.chrom.to_i>0 and r.chrom.to_i<23" \
-  --sfilter-samples $(($CON-1)),$(($SUB-1)) --sfilter "!s.empty? and s.dp>=$COV" 1>$vcf_filtered 2>>$ERR
+  --sfilter-samples $(($CON-1)),$(($SUB-1)) --sfilter "!s.empty? and s.dp>=$COV"  1>$vcf_filtered"tmp1" 2>>$ERR
+  cat $vcf_filtered"tmp1" | $run_BIOVCF -i --num-threads $MAX_THREADS --thread-lines 50_000 --sfilter-samples $(($CON-1)) --sfilter "s.gq>=$CON_GQ" 1>$vcf_filtered"tmp2" 2>>$ERR
+  cat $vcf_filtered"tmp2" | $run_BIOVCF -i --num-threads $MAX_THREADS --thread-lines 50_000 --sfilter-samples $(($SUB-1)) --sfilter "s.gq>=$SUB_GQ" 1>$vcf_filtered 2>>$ERR
+
 else
   printf "$FILTER is not a valid value for FILTER (PASS | ALL)\n"
   exit 1
@@ -107,7 +114,7 @@ techo "(1) Filtering SNV file with bio_vcf DONE" >> $LOG
 echo "Input file:" > $COUNTS
 $run_GREP -Pvc "^#" $SNV >> $COUNTS
 
-echo "Q"$QUAL" $FILTER "$COV"X autosomal:" >> $COUNTS
+echo "Q"$QUAL" CGQ"$CON_GQ" SGQ"$SUB_GQ $FILTER $COV"X autosomal:" >> $COUNTS
 $run_GREP -Pvc "^#" $vcf_filtered >> $COUNTS
 
 techo "(2) Removing blacklisted SNPs from SNV file STARTED" >> $LOG
@@ -115,7 +122,7 @@ COUNT=1
 vcf_tmp=$vcf_filtered_zip
 for vcf in "${BLACKLIST[@]}";
 do
-    OUT=$TMP_DIR/$SUB_NAME"_"$CON_NAME"_Q"$QUAL"_"$FILTER"_"$COV"X_autosomal_nonBlacklist_"$COUNT
+    OUT=$TMP_DIR/$SUB_NAME"_"$CON_NAME"_Q"$QUAL"_CGQ"$CON_GQ"_SGQ"$SUB_GQ"_"$FILTER"_"$COV"X_autosomal_nonBlacklist_"$COUNT
 
     $run_VCFTOOLS --gzvcf $vcf_tmp --exclude-positions $vcf --recode --recode-INFO-all --out $OUT 2>>$ERR
     $run_BGZIP -c $OUT.recode.vcf > $OUT.recode.vcf.gz 2>>$ERR
@@ -146,7 +153,7 @@ vcf_final_tmp=$vcf_final"_tmp"
 
 TIME=`date +"%Y-%m-%d_%H:%M:%S"`
 #FINAL_HEADER=`grep -P "^#" $vcf_final`
-HEADER_ADD="##SNVFI_filtering=<Version=$VERSION, Date=$TIME, Tools='bio-vcf=$run_BIOVCF tabix=$run_TABIX vcftools=$run_VCFTOOLS rscript=$run_RSCRIPT', SNV=$SNV, SUB=$SUB, CON=$CON, OUT_DIR=$OUT_DIR, QUAL=$QUAL, COV=$COV, VAF=$VAF, BLACKLIST=["
+HEADER_ADD="##SNVFI_filtering=<Version=$VERSION, Date=$TIME, Tools='bio-vcf=$run_BIOVCF tabix=$run_TABIX vcftools=$run_VCFTOOLS rscript=$run_RSCRIPT', SNV=$SNV, SUB=$SUB, CON=$CON, OUT_DIR=$OUT_DIR, QUAL=$QUAL, CON_GQ=$SUB_GQ, CON_GQ=$SUB_GQ,COV=$COV, VAF=$VAF, BLACKLIST=["
 HEADER_ADD+=`join , ${BLACKLIST[@]}`
 HEADER_ADD+="]>"
 
