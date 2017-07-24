@@ -183,6 +183,8 @@ if [ $CLEANUP == "YES" ]; then
     rm $OUT_DIR/*autosomal.vcf.gz.tbi
     rm $OUT_DIR/*nonBlacklist.vcf.gz
     rm $OUT_DIR/*nonBlacklist.vcf.gz.tbi
+    rm $vcf_filtered"tmp1
+    rm $vcf_filtered"tmp2
 fi
 
 techo "(5) Removing files that are not needed DONE" >> $LOG
