@@ -13,7 +13,7 @@ Alternatively use git clone:
 
 ## Usage
 SNVFI is configured using a config file, and an ini file for each filtering
-run.  In most scenarios you'll create the config file once and create an ini
+run. In most scenarios you'll create the config file once and create an ini
 file per filtering run.
 
 ### Edit SVNFI_default.config
@@ -41,11 +41,13 @@ file per filtering run.
     '<blacklist2.vcf>'
     );
 
+    SUB_GQ=<Minimum Genotype Quality in subject sample>
+    CON_GQ=<Minimum Genotype Quality in control sample>
     QUAL=<Minimum quality threshold>
     COV=<Minimum coverage threshold>
     FILTER=<Select either ALL variants or only PASS>
     VAF=<Variant Allele Frequency threshold>
-
+    
 
     MAIL=<Mail address for qsub>
 
