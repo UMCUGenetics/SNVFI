@@ -84,11 +84,11 @@ if [ ! $QUAL ]; then
     exit 1
 fi
 if [ ! $SUB_GQ ]; then
-    printf "Minimum Genotype Quality Score in subject specified as SUB_GQ in $ini not found!\n"
+    printf "Minimum Genotype Quality Score in subject specified as SUB_GQ in $ini not found! If you don't want to use Subject GQ filtering set the value of SUB_GQ to 0\n"
     exit 1
 fi
 if [ ! $CON_GQ ]; then
-    printf "Minimum Genotype Quality Score in control specified as CON_GQ in $ini not found!\n"
+    printf "Minimum Genotype Quality Score in control specified as CON_GQ in $ini not found! If you don't want to use Control GQ filtering set the value of CON_GQ to 0\n"
     exit 1
 fi
 
