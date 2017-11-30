@@ -153,7 +153,7 @@ vcf_final_tmp=$vcf_final"_tmp"
 
 TIME=`date +"%Y-%m-%d_%H:%M:%S"`
 #FINAL_HEADER=`grep -P "^#" $vcf_final`
-HEADER_ADD="##SNVFI_filtering=<Version=$VERSION, Date=$TIME, Tools='bio-vcf=$run_BIOVCF tabix=$run_TABIX vcftools=$run_VCFTOOLS rscript=$run_RSCRIPT', SNV=$SNV, SUB=$SUB, CON=$CON, OUT_DIR=$OUT_DIR, QUAL=$QUAL, CON_GQ=$SUB_GQ, CON_GQ=$SUB_GQ,COV=$COV, VAF=$VAF, BLACKLIST=["
+HEADER_ADD="##SNVFI_filtering=<Version=$VERSION, Date=$TIME, Tools='bio-vcf=$run_BIOVCF tabix=$run_TABIX vcftools=$run_VCFTOOLS rscript=$run_RSCRIPT', SNV=$SNV, SUB=$SUB, CON=$CON, OUT_DIR=$OUT_DIR, QUAL=$QUAL, SUB_GQ=$SUB_GQ, CON_GQ=$CON_GQ,COV=$COV, VAF=$VAF, BLACKLIST=["
 HEADER_ADD+=`join , ${BLACKLIST[@]}`
 HEADER_ADD+="]>"
 
